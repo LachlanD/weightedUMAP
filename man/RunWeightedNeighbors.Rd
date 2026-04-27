@@ -109,6 +109,14 @@ pbmc <- RunWeightedUMAP(pbmc, graph = "wt_nn", n.neighbors = 20,
                         reduction.name = "wt.umap")
 
 DimPlot(pbmc, reduction = "wt.umap", label = TRUE)
+
+# Use log.scale to compress the weight dynamic range so intermediate PCs
+# contribute more alongside the dominant early PCs
+pbmc <- RunWeightedNeighbors(pbmc, dims = 1:30, weight.by = "prop.var",
+                             log.scale = TRUE, graph.name = "wt.log")
+pbmc <- FindClusters(pbmc, graph.name = "wt.log_snn")
+pbmc <- RunWeightedUMAP(pbmc, graph = "wt.log_nn",
+                        reduction.name = "wt.umap.log")
 }
 }
 \seealso{

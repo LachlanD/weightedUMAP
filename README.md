@@ -66,6 +66,28 @@ pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "stdev")
 pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "none")
 ```
 
+### `log.scale`: compress weight dynamic range
+
+With `log.scale = TRUE`, `log1p()` is applied to the weights and they are
+re-normalised before the embedding. This compresses the gap between high- and
+low-variance PCs so that intermediate PCs receive relatively more influence,
+while still preserving the rank ordering of weights.
+
+| `log.scale` | Effect |
+|-------------|--------|
+| `FALSE` (default) | Weights applied as computed from `weight.by` |
+| `TRUE` | Weights transformed: `log1p(w) / Σ log1p(w)` |
+
+```r
+# Full weighting, no log scaling (default)
+pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "prop.var",
+                        log.scale = FALSE)
+
+# Log-scaled weights — intermediate PCs get relatively more influence
+pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "prop.var",
+                        log.scale = TRUE)
+```
+
 ---
 
 ## Standard vs Weighted UMAP

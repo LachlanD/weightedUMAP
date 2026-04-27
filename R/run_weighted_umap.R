@@ -73,26 +73,30 @@
 #'
 #' # Assumes pbmc has PCA already run
 #'
-#' # Standard UMAP — all PCs weighted equally (weight.by = "none")
+#' # Standard UMAP — all PCs weighted equally
 #' pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "none",
 #'                         reduction.name = "umap.std")
 #'
-#' # Weighted UMAP — PCs scaled by % variance explained before embedding,
-#' # so early PCs (more biological signal) dominate cell distances
+#' # Weighted UMAP — PCs scaled by proportion of variance explained
 #' pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "prop.var",
 #'                         reduction.name = "wt.umap")
 #'
-#' # Other weighting schemes
+#' # Log-scaled weights — compresses dynamic range so intermediate PCs
+#' # contribute more relative to the dominant PCs
+#' pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "prop.var",
+#'                         log.scale = TRUE, reduction.name = "wt.umap.log")
+#'
+#' # Standard deviation weighting
 #' pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "stdev",
 #'                         reduction.name = "wt.umap.sd")
-#' pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "stdev",
-#'                         reduction.name = "wt.umap.eig")
 #'
 #' # Compare standard vs weighted side by side
-#' p1 <- DimPlot(pbmc, reduction = "umap.std", label = TRUE) +
+#' p1 <- DimPlot(pbmc, reduction = "umap.std",   label = TRUE) +
 #'   ggtitle("Standard UMAP")
-#' p2 <- DimPlot(pbmc, reduction = "wt.umap",  label = TRUE) +
+#' p2 <- DimPlot(pbmc, reduction = "wt.umap",    label = TRUE) +
 #'   ggtitle("Weighted UMAP (prop.var)")
+#' p3 <- DimPlot(pbmc, reduction = "wt.umap.log", label = TRUE) +
+#'   ggtitle("Weighted UMAP (prop.var, log.scale)")
 #' p1 | p2
 #' }
 RunWeightedUMAP <- function(
