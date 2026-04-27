@@ -13,6 +13,7 @@ RunWeightedNeighbors(
   reduction.name = "wt.pca",
   reduction.key = "wtPCA_",
   graph.name = "wt",
+  weight.factor = 1,
   verbose = TRUE,
   ...
 )
@@ -56,6 +57,13 @@ Default: \code{"wtPCA_"}.}
 Pass this prefix to \code{FindClusters(graph.name = "<graph.name>_snn")}
 and \code{RunWeightedUMAP(graph = "<graph.name>_nn")}.
 Default: \code{"wt"}.}
+
+\item{weight.factor}{A number in \code{[0, 1]} controlling the influence of
+the weighting scheme.  At \code{1} (default) full variance-derived weights
+are applied.  At \code{0} all PCs contribute equally (standard
+nearest-neighbour graph).  Must match the \code{weight.factor} used in the
+subsequent \code{\link{RunWeightedUMAP}} call to keep clustering and
+visualisation in the same space.}
 
 \item{verbose}{Print progress messages and per-PC weights? Default: \code{TRUE}.}
 

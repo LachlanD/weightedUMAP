@@ -11,7 +11,7 @@
 #
 # @keywords internal
 .compute_weighted_embeddings <- function(object, reduction, dims, weight.by,
-                                         verbose) {
+                                         weight.factor, verbose) {
   if (!reduction %in% names(object@reductions)) {
     stop(
       sprintf(
@@ -80,8 +80,16 @@
     none       = rep(1.0, length(sdev))
   )
 
+  # ── Apply weight.factor interpolation ──────────────────────────────────────
+  # At weight.factor = 0: all PCs contribute equally (standard UMAP).
+  # At weight.factor = 1: full variance-derived weights applied.
+  if (weight.factor < 1) {
+    weights <- (1 - weight.factor) * mean(weights) + weight.factor * weights
+  }
+
   if (verbose) {
-    message(sprintf("[wUMAP] Weight scheme : %s", weight.by))
+    message(sprintf("[wUMAP] Weight scheme : %s (factor = %.2g)",
+                    weight.by, weight.factor))
     message(sprintf("[wUMAP] Dimensions    : %d (dims %d\u2013%d)",
                     length(dims), min(dims), max(dims)))
     max_show <- min(length(weights), 10L)

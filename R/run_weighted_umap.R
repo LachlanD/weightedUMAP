@@ -36,6 +36,11 @@
 #' @param spread Effective scale of embedded points. Default: `1`.
 #' @param seed.use Random seed for reproducibility. Set to `NULL` to skip
 #'   `set.seed()`. Default: `42`.
+#' @param weight.factor A number in `[0, 1]` that scales the influence of the
+#'   chosen weighting scheme.  At `1` (default) the full variance-derived
+#'   weights are applied.  At `0` all PCs contribute equally, equivalent to
+#'   `weight.by = "none"` (standard UMAP).  Intermediate values blend
+#'   uniformly-weighted and fully-weighted embeddings.
 #' @param verbose Print progress messages and per-PC weights? Default: `TRUE`.
 #' @param graph Optional name of a precomputed Seurat KNN graph produced by
 #'   [RunWeightedNeighbors()] (e.g. `"wt_nn"`).  When supplied, UMAP is run
@@ -103,6 +108,7 @@ RunWeightedUMAP <- function(
     min.dist       = 0.3,
     spread         = 1,
     seed.use       = 42L,
+    weight.factor  = 1,
     verbose        = TRUE,
     ...
 ) {
@@ -116,6 +122,12 @@ RunWeightedUMAP <- function(
   }
 
   weight.by <- match.arg(weight.by)
+
+  if (!is.numeric(weight.factor) || length(weight.factor) != 1 ||
+      weight.factor < 0 || weight.factor > 1) {
+    stop("'weight.factor' must be a single number between 0 and 1.",
+         call. = FALSE)
+  }
 
   # ── Graph-based path (uses weighted embedding that produced the graph) ──────
   if (!is.null(graph)) {
@@ -267,8 +279,12 @@ RunWeightedUMAP <- function(
     none       = rep(1.0, length(sdev))
   )
 
+  if (weight.factor < 1) {
+    weights <- (1 - weight.factor) * mean(weights) + weight.factor * weights
+  }
+
   if (verbose) {
-    message(sprintf("[wUMAP] Weight scheme : %s", weight.by))
+    message(sprintf("[wUMAP] Weight scheme : %s (factor = %.2g)", weight.by, weight.factor))
     message(sprintf("[wUMAP] Dimensions    : %d (dims %d–%d)",
                     length(dims), min(dims), max(dims)))
     max_show <- min(length(weights), 10L)

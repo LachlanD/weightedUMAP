@@ -6,7 +6,7 @@
 
 ## Motivation
 
-Standard UMAP treats every PC dimension equally when computing cell–cell distances. In practice, PC1 might explain 15% of variance while PC30 explains 0.3% — yet both contribute equally to the distance matrix. Weighting PCs by their variance explained amplifies axes of real biological variation and suppresses noise-dominated dimensions, often producing tighter, better-separated clusters.
+Standard UMAP treats every PC dimension equally when computing cell–cell distances. In practice, PC1 might explain 15% of variance while PC30 explains 0.3% — yet both contribute equally to the distance matrix. Weighting PCs by their variance explained amplifies axes of real biological variation and suppresses noise-dominated dimensions.
 
 ---
 
@@ -32,6 +32,24 @@ library(wUMAP)
 # Assumes pbmc has PCA already computed (e.g. via RunPCA())
 pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "pct.var")
 DimPlot(pbmc, reduction = "wt.umap", label = TRUE)
+```
+
+### `weight.factor`: continuous control
+
+`weight.factor` (0–1) blends between standard UMAP (0) and fully weighted UMAP (1):
+
+```r
+# Standard UMAP — all PCs equal
+pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "pct.var",
+                        weight.factor = 0)
+
+# Half-strength weighting
+pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "pct.var",
+                        weight.factor = 0.5)
+
+# Full weighting (default)
+pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "pct.var",
+                        weight.factor = 1)
 ```
 
 ### Weighting schemes
@@ -87,6 +105,7 @@ RunWeightedUMAP(
   reduction      = "pca",       # source reduction
   dims           = NULL,        # e.g. 1:30; NULL uses all available dims
   weight.by      = "pct.var",   # weighting scheme (see table above)
+  weight.factor  = 1,           # 0 = standard UMAP, 1 = fully weighted
   graph          = NULL,        # name of KNN graph from RunWeightedNeighbors()
                                 #   e.g. "wt_nn"; overrides dims/weight.by/reduction
   reduction.name = "wt.umap",   # name stored in the Seurat object

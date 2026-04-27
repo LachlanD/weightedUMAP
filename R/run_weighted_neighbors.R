@@ -21,6 +21,12 @@
 #'   Pass this prefix to \code{FindClusters(graph.name = "<graph.name>_snn")}
 #'   and \code{RunWeightedUMAP(graph = "<graph.name>_nn")}.
 #'   Default: \code{"wt"}.
+#' @param weight.factor A number in \code{[0, 1]} controlling the influence of
+#'   the weighting scheme.  At \code{1} (default) full variance-derived weights
+#'   are applied.  At \code{0} all PCs contribute equally (standard
+#'   nearest-neighbour graph).  Must match the \code{weight.factor} used in the
+#'   subsequent \code{\link{RunWeightedUMAP}} call to keep clustering and
+#'   visualisation in the same space.
 #' @param ... Additional arguments forwarded to
 #'   \code{\link[Seurat]{FindNeighbors}}.
 #'
@@ -65,6 +71,7 @@ RunWeightedNeighbors <- function(
     reduction.name = "wt.pca",
     reduction.key  = "wtPCA_",
     graph.name     = "wt",
+    weight.factor  = 1,
     verbose        = TRUE,
     ...
 ) {
@@ -78,8 +85,15 @@ RunWeightedNeighbors <- function(
 
   weight.by <- match.arg(weight.by)
 
+  if (!is.numeric(weight.factor) || length(weight.factor) != 1 ||
+      weight.factor < 0 || weight.factor > 1) {
+    stop("'weight.factor' must be a single number between 0 and 1.",
+         call. = FALSE)
+  }
+
   # ── Compute weighted embeddings ────────────────────────────────────────────
-  wt <- .compute_weighted_embeddings(object, reduction, dims, weight.by, verbose)
+  wt <- .compute_weighted_embeddings(object, reduction, dims, weight.by,
+                                      weight.factor, verbose)
 
   # ── Store weighted embeddings as a new DimReduc ───────────────────────────
   source_assay <- tryCatch(
@@ -97,6 +111,7 @@ RunWeightedNeighbors <- function(
     assay      = source_assay,
     misc       = list(
       weight.by        = weight.by,
+      weight.factor    = weight.factor,
       weights          = wt$weights,
       source.reduction = reduction,
       dims.used        = wt$dims

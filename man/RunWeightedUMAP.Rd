@@ -18,6 +18,7 @@ RunWeightedUMAP(
   min.dist = 0.3,
   spread = 1,
   seed.use = 42L,
+  weight.factor = 1,
   verbose = TRUE,
   ...
 )
@@ -76,6 +77,12 @@ Default: \code{0.3}.}
 
 \item{seed.use}{Random seed for reproducibility. Set to \code{NULL} to skip
 \code{set.seed()}. Default: \code{42}.}
+
+\item{weight.factor}{A number in \verb{[0, 1]} that scales the influence of the
+chosen weighting scheme.  At \code{1} (default) the full variance-derived
+weights are applied.  At \code{0} all PCs contribute equally, equivalent to
+\code{weight.by = "none"} (standard UMAP).  Intermediate values blend
+uniformly-weighted and fully-weighted embeddings.}
 
 \item{verbose}{Print progress messages and per-PC weights? Default: \code{TRUE}.}
 
