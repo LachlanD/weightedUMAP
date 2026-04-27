@@ -8,7 +8,7 @@ RunWeightedNeighbors(
   object,
   reduction = "pca",
   dims = NULL,
-  weight.by = c("prop.var", "eigenvalue", "stdev", "none"),
+  weight.by = c("prop.var", "stdev", "none"),
   k.param = 20L,
   reduction.name = "wt.pca",
   reduction.key = "wtPCA_",
@@ -34,7 +34,6 @@ One of:
 \describe{
 \item{\code{"prop.var"}}{Proportion of variance explained
 (\code{sdev^2 / sum(sdev^2)}). Default.}
-\item{\code{"eigenvalue"}}{Eigenvalue (\code{sdev^2}).}
 \item{\code{"stdev"}}{Standard deviation (\code{sdev}).}
 \item{\code{"none"}}{No weighting; equivalent to standard UMAP on PCA
 scores.}

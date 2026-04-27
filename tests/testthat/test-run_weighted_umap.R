@@ -85,13 +85,13 @@ test_that("misc slot stores weight metadata", {
   result <- RunWeightedUMAP(
     pbmc_small,
     dims      = 1:5,
-    weight.by = "eigenvalue",
+    weight.by = "prop.var",
     verbose   = FALSE,
     n.neighbors = 5L
   )
 
   misc <- Misc(result[["wt.umap"]])
-  expect_equal(misc$weight.by, "eigenvalue")
+  expect_equal(misc$weight.by, "prop.var")
   expect_length(misc$weights, 5L)
   expect_equal(misc$source.reduction, "pca")
   expect_equal(misc$dims.used, 1:5)

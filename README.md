@@ -54,19 +54,16 @@ pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "prop.var",
 
 ### Weighting schemes
 
-| `weight.by`   | Formula                              | Description                          |
-|---------------|--------------------------------------|--------------------------------------|
-| `"prop.var"`   | `sdev² / sum(sdev²) × 100`          | Percentage of variance explained (default) |
-| `"prop.var"`  | `sdev² / sum(sdev²)`                | Proportion of variance explained     |
-| `"eigenvalue"`| `sdev²`                             | Raw eigenvalue                       |
-| `"stdev"`     | `sdev`                              | Standard deviation                   |
-| `"none"`      | `1` (all equal)                      | No weighting — equivalent to standard UMAP |
+| `weight.by`   | Weight applied to PC _i_              | Description                          |
+|---------------|---------------------------------------|--------------------------------------|
+| `"prop.var"`  | `sdevᵢ² / Σ sdev²`                   | Proportion of variance explained (default) |
+| `"stdev"`     | `sdevᵢ`                               | Standard deviation                   |
+| `"none"`      | `1`                                   | No weighting — equivalent to standard UMAP |
 
 ```r
 pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "prop.var")    # default
 pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "stdev")
-pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "eigenvalue")
-pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "prop.var")
+pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "none")
 ```
 
 ---

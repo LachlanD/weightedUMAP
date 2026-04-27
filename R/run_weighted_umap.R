@@ -16,7 +16,6 @@
 #'   \describe{
 #'     \item{`"prop.var"`}{Proportion of variance explained
 #'       (`sdev^2 / sum(sdev^2)`). Default.}
-#'     \item{`"eigenvalue"`}{Eigenvalue (`sdev^2`).}
 #'     \item{`"stdev"`}{Standard deviation (`sdev`).}
 #'     \item{`"none"`}{No weighting; equivalent to standard UMAP on PCA
 #'       scores.}
@@ -82,7 +81,7 @@
 #' # Other weighting schemes
 #' pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "stdev",
 #'                         reduction.name = "wt.umap.sd")
-#' pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "eigenvalue",
+#' pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "stdev",
 #'                         reduction.name = "wt.umap.eig")
 #'
 #' # Compare standard vs weighted side by side
@@ -96,7 +95,7 @@ RunWeightedUMAP <- function(
     object,
     reduction      = "pca",
     dims           = NULL,
-    weight.by      = c("prop.var", "eigenvalue", "stdev", "none"),
+    weight.by      = c("prop.var", "stdev", "none"),
     graph          = NULL,
     reduction.name = "wt.umap",
     reduction.key  = "wtUMAP_",
@@ -271,7 +270,6 @@ RunWeightedUMAP <- function(
   weights <- switch(
     weight.by,
     prop.var   = sdev^2 / sum(sdev^2),
-    eigenvalue = sdev^2,
     stdev      = sdev,
     none       = rep(1.0, length(sdev))
   )

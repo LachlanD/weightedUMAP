@@ -35,12 +35,12 @@ test_that("RunWeightedNeighbors misc slot is populated", {
   pbmc <- .make_pbmc()
 
   result <- suppressWarnings(
-    RunWeightedNeighbors(pbmc, dims = 1:5, weight.by = "eigenvalue",
+    RunWeightedNeighbors(pbmc, dims = 1:5, weight.by = "prop.var",
                          k.param = 5L, graph.name = "wt", verbose = FALSE)
   )
 
   misc <- Misc(result[["wt.pca"]])
-  expect_equal(misc$weight.by, "eigenvalue")
+  expect_equal(misc$weight.by, "prop.var")
   expect_length(misc$weights, 5L)
   expect_equal(misc$source.reduction, "pca")
   expect_equal(misc$dims.used, 1:5)
