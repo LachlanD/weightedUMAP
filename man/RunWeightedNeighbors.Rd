@@ -12,7 +12,7 @@ RunWeightedNeighbors(
   k.param = 20L,
   reduction.name = "wt.pca",
   reduction.key = "wtPCA_",
-  graph.name = "wt",
+  prefix = "wt",
   weight.factor = 1,
   log.scale = FALSE,
   verbose = TRUE,
@@ -49,11 +49,11 @@ embedding in \code{object}.  Default: \code{"wt.pca"}.}
 \item{reduction.key}{Column-name prefix for the weighted-PC dimensions.
 Default: \code{"wtPCA_"}.}
 
-\item{graph.name}{Prefix for the two graphs stored in the Seurat object:
-\code{<graph.name>_nn} (KNN, used for UMAP) and
-\code{<graph.name>_snn} (SNN, used for clustering).
-Pass this prefix to \code{FindClusters(graph.name = "<graph.name>_snn")}
-and \code{RunWeightedUMAP(graph = "<graph.name>_nn")}.
+\item{prefix}{Prefix for the two graphs stored in the Seurat object:
+\code{<prefix>_nn} (KNN, used for UMAP) and
+\code{<prefix>_snn} (SNN, used for clustering).
+Pass this prefix to \code{FindClusters(graph.name = "<prefix>_snn")}
+and \code{RunWeightedUMAP(graph = "<prefix>_nn")}.
 Default: \code{"wt"}.}
 
 \item{weight.factor}{A number in \code{[0, 1]} controlling the influence of
@@ -78,8 +78,8 @@ The input Seurat \code{object} with:
 \itemize{
 \item A new \code{DimReduc} stored under \code{reduction.name}
 containing the variance-weighted PC embeddings.
-\item Two neighbour graphs (\code{<graph.name>_nn} and
-\code{<graph.name>_snn}) suitable for downstream
+\item Two neighbour graphs (\code{<prefix>_nn} and
+\code{<prefix>_snn}) suitable for downstream
 \code{FindClusters()} and \code{RunWeightedUMAP(graph = ...)}.
 }
 }
@@ -99,7 +99,7 @@ library(wUMAP)
 
 # 1. Compute the weighted KNN/SNN graphs (same space for clustering + UMAP)
 pbmc <- RunWeightedNeighbors(pbmc, dims = 1:30, weight.by = "prop.var",
-                             graph.name = "wt")
+                             prefix = "wt")
 
 # 2. Cluster on the weighted SNN graph
 pbmc <- FindClusters(pbmc, graph.name = "wt_snn")
@@ -113,7 +113,7 @@ DimPlot(pbmc, reduction = "wt.umap", label = TRUE)
 # Use log.scale to compress the weight dynamic range so intermediate PCs
 # contribute more alongside the dominant early PCs
 pbmc <- RunWeightedNeighbors(pbmc, dims = 1:30, weight.by = "prop.var",
-                             log.scale = TRUE, graph.name = "wt.log")
+                             log.scale = TRUE, prefix = "wt.log")
 pbmc <- FindClusters(pbmc, graph.name = "wt.log_snn")
 pbmc <- RunWeightedUMAP(pbmc, graph = "wt.log_nn",
                         reduction.name = "wt.umap.log")

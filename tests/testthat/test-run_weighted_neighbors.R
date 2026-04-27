@@ -15,7 +15,7 @@ test_that("RunWeightedNeighbors stores weighted DimReduc and two graphs", {
 
   result <- suppressWarnings(
     RunWeightedNeighbors(pbmc, dims = 1:5, weight.by = "prop.var",
-                         k.param = 5L, graph.name = "wt", verbose = FALSE)
+                         k.param = 5L, prefix = "wt", verbose = FALSE)
   )
 
   # Weighted embedding stored
@@ -36,7 +36,7 @@ test_that("RunWeightedNeighbors misc slot is populated", {
 
   result <- suppressWarnings(
     RunWeightedNeighbors(pbmc, dims = 1:5, weight.by = "prop.var",
-                         k.param = 5L, graph.name = "wt", verbose = FALSE)
+                         k.param = 5L, prefix = "wt", verbose = FALSE)
   )
 
   misc <- Misc(result[["wt.pca"]])
@@ -67,7 +67,7 @@ test_that("RunWeightedUMAP graph path produces correct embedding shape", {
 
   pbmc <- suppressWarnings(
     RunWeightedNeighbors(pbmc, dims = 1:5, weight.by = "prop.var",
-                         k.param = 5L, graph.name = "wt", verbose = FALSE)
+                         k.param = 5L, prefix = "wt", verbose = FALSE)
   )
 
   result <- RunWeightedUMAP(
@@ -105,7 +105,7 @@ test_that("graph path and standard path produce same embedding dimensions", {
 
   pbmc <- suppressWarnings(
     RunWeightedNeighbors(pbmc, dims = 1:5, weight.by = "prop.var",
-                         k.param = 5L, graph.name = "wt", verbose = FALSE)
+                         k.param = 5L, prefix = "wt", verbose = FALSE)
   )
 
   via_graph <- RunWeightedUMAP(pbmc, graph = "wt_nn", n.neighbors = 5L,

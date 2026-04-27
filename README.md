@@ -170,7 +170,7 @@ library(patchwork)
 # Step 1 — build weighted KNN/SNN graphs (k = 20 by default)
 #           stores 'wt.pca' embedding and 'wt_nn' / 'wt_snn' graphs
 pbmc <- RunWeightedNeighbors(pbmc, dims = 1:30, weight.by = "prop.var",
-                              k.param = 20, graph.name = "wt")
+                              k.param = 20, prefix = "wt")
 
 # Step 2 — cluster on the weighted SNN graph
 pbmc <- FindClusters(pbmc, graph.name = "wt_snn")
