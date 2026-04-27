@@ -2,7 +2,8 @@ Package: wUMAP
 Title: Variance-Weighted PCA UMAP for Seurat Objects
 Version: 0.1.0
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
+    person("Lachlan", "Dryburgh", role = c("aut", "cre"),
+           email = "lachlan.dryburgh@example.com")
 Description: Provides RunWeightedUMAP() and RunWeightedNeighbors() for use
     with Seurat objects. Each principal component axis is scaled by a weight
     derived from its variance contribution before manifold learning, so that
