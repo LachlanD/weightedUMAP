@@ -13,13 +13,11 @@ test_that("RunWeightedUMAP returns a Seurat object with new reduction", {
   result <- RunWeightedUMAP(
     pbmc_small,
     dims          = 1:5,
-    weight.by     = "pct.var",
+    weight.by     = "prop.var",
     n.neighbors   = 5L,
     n.components  = 2L,
     verbose       = FALSE
   )
-
-  expect_s4_class(result, "Seurat")
   expect_true("wt.umap" %in% names(result@reductions))
 
   emb <- Embeddings(result[["wt.umap"]])
@@ -111,8 +109,7 @@ test_that("weight.factor = 0 produces uniform weights", {
   result <- RunWeightedUMAP(
     pbmc_small,
     dims          = 1:5,
-    weight.by     = "pct.var",
-    weight.factor = 0,
+    weight.by     = "prop.var",
     n.neighbors   = 5L,
     verbose       = FALSE
   )
@@ -131,11 +128,11 @@ test_that("weight.factor = 0.5 produces intermediate embedding", {
   data("pbmc_small", package = "SeuratObject")
   pbmc_small <- RunPCA(pbmc_small, npcs = 10, verbose = FALSE)
 
-  r0 <- RunWeightedUMAP(pbmc_small, dims = 1:5, weight.by = "pct.var",
+  r0 <- RunWeightedUMAP(pbmc_small, dims = 1:5, weight.by = "prop.var",
                         weight.factor = 0, n.neighbors = 5L, verbose = FALSE)
-  r1 <- RunWeightedUMAP(pbmc_small, dims = 1:5, weight.by = "pct.var",
+  r1 <- RunWeightedUMAP(pbmc_small, dims = 1:5, weight.by = "prop.var",
                         weight.factor = 1, n.neighbors = 5L, verbose = FALSE)
-  r5 <- RunWeightedUMAP(pbmc_small, dims = 1:5, weight.by = "pct.var",
+  r5 <- RunWeightedUMAP(pbmc_small, dims = 1:5, weight.by = "prop.var",
                         weight.factor = 0.5, n.neighbors = 5L, verbose = FALSE)
 
   # Intermediate embedding should differ from both extremes

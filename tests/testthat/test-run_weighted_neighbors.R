@@ -14,7 +14,7 @@ test_that("RunWeightedNeighbors stores weighted DimReduc and two graphs", {
   pbmc <- .make_pbmc()
 
   result <- suppressWarnings(
-    RunWeightedNeighbors(pbmc, dims = 1:5, weight.by = "pct.var",
+    RunWeightedNeighbors(pbmc, dims = 1:5, weight.by = "prop.var",
                          k.param = 5L, graph.name = "wt", verbose = FALSE)
   )
 
@@ -66,7 +66,7 @@ test_that("RunWeightedUMAP graph path produces correct embedding shape", {
   pbmc <- .make_pbmc()
 
   pbmc <- suppressWarnings(
-    RunWeightedNeighbors(pbmc, dims = 1:5, weight.by = "pct.var",
+    RunWeightedNeighbors(pbmc, dims = 1:5, weight.by = "prop.var",
                          k.param = 5L, graph.name = "wt", verbose = FALSE)
   )
 
@@ -104,7 +104,7 @@ test_that("graph path and standard path produce same embedding dimensions", {
   pbmc <- .make_pbmc()
 
   pbmc <- suppressWarnings(
-    RunWeightedNeighbors(pbmc, dims = 1:5, weight.by = "pct.var",
+    RunWeightedNeighbors(pbmc, dims = 1:5, weight.by = "prop.var",
                          k.param = 5L, graph.name = "wt", verbose = FALSE)
   )
 
@@ -112,7 +112,7 @@ test_that("graph path and standard path produce same embedding dimensions", {
                                 n.components = 2L, reduction.name = "umap.graph",
                                 verbose = FALSE)
 
-  via_emb   <- RunWeightedUMAP(pbmc, dims = 1:5, weight.by = "pct.var",
+  via_emb   <- RunWeightedUMAP(pbmc, dims = 1:5, weight.by = "prop.var",
                                 n.neighbors = 5L, n.components = 2L,
                                 reduction.name = "umap.emb", verbose = FALSE)
 

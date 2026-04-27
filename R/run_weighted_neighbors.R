@@ -50,7 +50,7 @@
 #' library(wUMAP)
 #'
 #' # 1. Compute the weighted KNN/SNN graphs (same space for clustering + UMAP)
-#' pbmc <- RunWeightedNeighbors(pbmc, dims = 1:30, weight.by = "pct.var",
+#' pbmc <- RunWeightedNeighbors(pbmc, dims = 1:30, weight.by = "prop.var",
 #'                              graph.name = "wt")
 #'
 #' # 2. Cluster on the weighted SNN graph
@@ -66,7 +66,7 @@ RunWeightedNeighbors <- function(
     object,
     reduction      = "pca",
     dims           = NULL,
-    weight.by      = c("pct.var", "prop.var", "eigenvalue", "stdev", "none"),
+    weight.by      = c("prop.var", "eigenvalue", "stdev", "none"),
     k.param        = 20L,
     reduction.name = "wt.pca",
     reduction.key  = "wtPCA_",

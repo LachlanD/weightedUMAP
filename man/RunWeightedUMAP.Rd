@@ -8,7 +8,7 @@ RunWeightedUMAP(
   object,
   reduction = "pca",
   dims = NULL,
-  weight.by = c("pct.var", "prop.var", "eigenvalue", "stdev", "none"),
+  weight.by = c("prop.var", "eigenvalue", "stdev", "none"),
   graph = NULL,
   reduction.name = "wt.umap",
   reduction.key = "wtUMAP_",
@@ -37,10 +37,8 @@ than 50.}
 \item{weight.by}{Weighting scheme applied to PC scores before UMAP.
 One of:
 \describe{
-\item{\code{"pct.var"}}{Percentage of variance explained
-(\code{sdev^2 / sum(sdev^2) * 100}). Default.}
 \item{\code{"prop.var"}}{Proportion of variance explained
-(\code{sdev^2 / sum(sdev^2)}).}
+(\code{sdev^2 / sum(sdev^2)}). Default.}
 \item{\code{"eigenvalue"}}{Eigenvalue (\code{sdev^2}).}
 \item{\code{"stdev"}}{Standard deviation (\code{sdev}).}
 \item{\code{"none"}}{No weighting; equivalent to standard UMAP on PCA
@@ -117,7 +115,7 @@ pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "none",
 
 # Weighted UMAP — PCs scaled by \% variance explained before embedding,
 # so early PCs (more biological signal) dominate cell distances
-pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "pct.var",
+pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "prop.var",
                         reduction.name = "wt.umap")
 
 # Other weighting schemes
@@ -130,7 +128,7 @@ pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "eigenvalue",
 p1 <- DimPlot(pbmc, reduction = "umap.std", label = TRUE) +
   ggtitle("Standard UMAP")
 p2 <- DimPlot(pbmc, reduction = "wt.umap",  label = TRUE) +
-  ggtitle("Weighted UMAP (pct.var)")
+  ggtitle("Weighted UMAP (prop.var)")
 p1 | p2
 }
 }

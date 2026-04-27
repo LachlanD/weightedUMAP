@@ -73,7 +73,6 @@
 
   weights <- switch(
     weight.by,
-    pct.var    = sdev^2 / sum(sdev^2) * 100,
     prop.var   = sdev^2 / sum(sdev^2),
     eigenvalue = sdev^2,
     stdev      = sdev,

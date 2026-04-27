@@ -14,7 +14,7 @@ Standard UMAP treats every PC dimension equally when computing cell–cell dista
 
 ```r
 # Install from GitHub (requires remotes)
-remotes::install_github("your-username/weightedUMAP")
+remotes::install_github("LachlanD/weightedUMAP")
 ```
 
 Dependencies (`uwot`, `SeuratObject`) will be installed automatically.
@@ -30,7 +30,7 @@ library(Seurat)
 library(wUMAP)
 
 # Assumes pbmc has PCA already computed (e.g. via RunPCA())
-pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "pct.var")
+pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "prop.var")
 DimPlot(pbmc, reduction = "wt.umap", label = TRUE)
 ```
 
@@ -40,15 +40,15 @@ DimPlot(pbmc, reduction = "wt.umap", label = TRUE)
 
 ```r
 # Standard UMAP — all PCs equal
-pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "pct.var",
+pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "prop.var",
                         weight.factor = 0)
 
 # Half-strength weighting
-pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "pct.var",
+pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "prop.var",
                         weight.factor = 0.5)
 
 # Full weighting (default)
-pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "pct.var",
+pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "prop.var",
                         weight.factor = 1)
 ```
 
@@ -56,14 +56,14 @@ pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "pct.var",
 
 | `weight.by`   | Formula                              | Description                          |
 |---------------|--------------------------------------|--------------------------------------|
-| `"pct.var"`   | `sdev² / sum(sdev²) × 100`          | Percentage of variance explained (default) |
+| `"prop.var"`   | `sdev² / sum(sdev²) × 100`          | Percentage of variance explained (default) |
 | `"prop.var"`  | `sdev² / sum(sdev²)`                | Proportion of variance explained     |
 | `"eigenvalue"`| `sdev²`                             | Raw eigenvalue                       |
 | `"stdev"`     | `sdev`                              | Standard deviation                   |
 | `"none"`      | `1` (all equal)                      | No weighting — equivalent to standard UMAP |
 
 ```r
-pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "pct.var")    # default
+pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "prop.var")    # default
 pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "stdev")
 pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "eigenvalue")
 pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "prop.var")
@@ -76,7 +76,7 @@ pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "prop.var")
 The key difference is how PC scores are scaled before distances are computed:
 
 - **Standard UMAP** (`weight.by = "none"`) — every PC contributes equally, so noisy high-index PCs can blur cluster boundaries.
-- **Weighted UMAP** (`weight.by = "pct.var"`) — PCs are multiplied by their weight before UMAP runs, so dominant axes of biological variation drive the layout.
+- **Weighted UMAP** (`weight.by = "prop.var"`) — PCs are multiplied by their weight before UMAP runs, so dominant axes of biological variation drive the layout.
 
 ```r
 library(patchwork)
@@ -84,14 +84,14 @@ library(patchwork)
 # Run both on the same object
 pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "none",
                         reduction.name = "umap.std")
-pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "pct.var",
+pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "prop.var",
                         reduction.name = "wt.umap")
 
 # Compare side by side
 p1 <- DimPlot(pbmc, reduction = "umap.std", label = TRUE) +
   ggtitle("Standard UMAP")
 p2 <- DimPlot(pbmc, reduction = "wt.umap",  label = TRUE) +
-  ggtitle("Weighted UMAP (pct.var)")
+  ggtitle("Weighted UMAP (prop.var)")
 p1 | p2
 ```
 
@@ -104,7 +104,7 @@ RunWeightedUMAP(
   object,
   reduction      = "pca",       # source reduction
   dims           = NULL,        # e.g. 1:30; NULL uses all available dims
-  weight.by      = "pct.var",   # weighting scheme (see table above)
+  weight.by      = "prop.var",   # weighting scheme (see table above)
   weight.factor  = 1,           # 0 = standard UMAP, 1 = fully weighted
   graph          = NULL,        # name of KNN graph from RunWeightedNeighbors()
                                 #   e.g. "wt_nn"; overrides dims/weight.by/reduction
@@ -149,7 +149,7 @@ library(patchwork)
 
 # Step 1 — build weighted KNN/SNN graphs (k = 20 by default)
 #           stores 'wt.pca' embedding and 'wt_nn' / 'wt_snn' graphs
-pbmc <- RunWeightedNeighbors(pbmc, dims = 1:30, weight.by = "pct.var",
+pbmc <- RunWeightedNeighbors(pbmc, dims = 1:30, weight.by = "prop.var",
                               k.param = 20, graph.name = "wt")
 
 # Step 2 — cluster on the weighted SNN graph
