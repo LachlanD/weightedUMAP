@@ -1,0 +1,20 @@
+Package: wUMAP
+Title: Variance-Weighted PCA UMAP for Seurat Objects
+Version: 0.1.0
+Authors@R: 
+    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
+Description: Provides RunWeightedUMAP(), a drop-in replacement for Seurat
+    RunUMAP() where each principal component axis is scaled by a weight
+    derived from its percentage of explained variance before manifold
+    learning.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Imports:
+    uwot,
+    SeuratObject,
+    methods
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
