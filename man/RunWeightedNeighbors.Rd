@@ -14,6 +14,7 @@ RunWeightedNeighbors(
   reduction.key = "wtPCA_",
   graph.name = "wt",
   weight.factor = 1,
+  log.scale = FALSE,
   verbose = TRUE,
   ...
 )
@@ -61,6 +62,11 @@ are applied.  At \code{0} all PCs contribute equally (standard
 nearest-neighbour graph).  Must match the \code{weight.factor} used in the
 subsequent \code{\link{RunWeightedUMAP}} call to keep clustering and
 visualisation in the same space.}
+
+\item{log.scale}{Logical. If \code{TRUE}, \code{log1p()} is applied to the
+weights before the \code{weight.factor} interpolation.  Should match the
+value used in the subsequent \code{\link{RunWeightedUMAP}} call.
+Default: \code{FALSE}.}
 
 \item{verbose}{Print progress messages and per-PC weights? Default: \code{TRUE}.}
 

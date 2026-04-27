@@ -101,8 +101,9 @@ RunWeightedUMAP(
   object,
   reduction      = "pca",       # source reduction
   dims           = NULL,        # e.g. 1:30; NULL uses all available dims
-  weight.by      = "prop.var",   # weighting scheme (see table above)
+  weight.by      = "prop.var",  # weighting scheme (see table above)
   weight.factor  = 1,           # 0 = standard UMAP, 1 = fully weighted
+  log.scale      = FALSE,       # compress weight dynamic range with log1p()
   graph          = NULL,        # name of KNN graph from RunWeightedNeighbors()
                                 #   e.g. "wt_nn"; overrides dims/weight.by/reduction
   reduction.name = "wt.umap",   # name stored in the Seurat object

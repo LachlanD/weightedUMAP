@@ -27,6 +27,10 @@
 #'   nearest-neighbour graph).  Must match the \code{weight.factor} used in the
 #'   subsequent \code{\link{RunWeightedUMAP}} call to keep clustering and
 #'   visualisation in the same space.
+#' @param log.scale Logical. If \code{TRUE}, \code{log1p()} is applied to the
+#'   weights before the \code{weight.factor} interpolation.  Should match the
+#'   value used in the subsequent \code{\link{RunWeightedUMAP}} call.
+#'   Default: \code{FALSE}.
 #' @param ... Additional arguments forwarded to
 #'   \code{\link[Seurat]{FindNeighbors}}.
 #'
@@ -72,6 +76,7 @@ RunWeightedNeighbors <- function(
     reduction.key  = "wtPCA_",
     graph.name     = "wt",
     weight.factor  = 1,
+    log.scale      = FALSE,
     verbose        = TRUE,
     ...
 ) {
@@ -91,9 +96,13 @@ RunWeightedNeighbors <- function(
          call. = FALSE)
   }
 
+  if (!is.logical(log.scale) || length(log.scale) != 1) {
+    stop("'log.scale' must be TRUE or FALSE.", call. = FALSE)
+  }
+
   # ── Compute weighted embeddings ────────────────────────────────────────────
   wt <- .compute_weighted_embeddings(object, reduction, dims, weight.by,
-                                      weight.factor, verbose)
+                                      weight.factor, log.scale, verbose)
 
   # ── Store weighted embeddings as a new DimReduc ───────────────────────────
   source_assay <- tryCatch(
@@ -112,6 +121,7 @@ RunWeightedNeighbors <- function(
     misc       = list(
       weight.by        = weight.by,
       weight.factor    = weight.factor,
+      log.scale        = log.scale,
       weights          = wt$weights,
       source.reduction = reduction,
       dims.used        = wt$dims

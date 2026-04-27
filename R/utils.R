@@ -11,7 +11,7 @@
 #
 # @keywords internal
 .compute_weighted_embeddings <- function(object, reduction, dims, weight.by,
-                                         weight.factor, verbose) {
+                                         weight.factor, log.scale, verbose) {
   if (!reduction %in% names(object@reductions)) {
     stop(
       sprintf(
@@ -77,6 +77,12 @@
     stdev      = sdev / sum(sdev),
     none       = rep(1.0, length(sdev))
   )
+
+  # ── Apply log scaling ────────────────────────────────────────────────────────────────────
+  if (log.scale && !identical(weight.by, "none")) {
+    weights <- log1p(weights)
+    weights <- weights / sum(weights)
+  }
 
   # ── Apply weight.factor interpolation ──────────────────────────────────────
   # At weight.factor = 0: all PCs contribute equally (standard UMAP).

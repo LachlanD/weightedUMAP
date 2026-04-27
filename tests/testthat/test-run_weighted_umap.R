@@ -158,3 +158,33 @@ test_that("weight.factor out of range errors", {
     regexp = "between 0 and 1"
   )
 })
+
+test_that("log.scale = TRUE produces a different embedding than log.scale = FALSE", {
+  skip_if_not_installed("Seurat")
+  skip_if_not_installed("uwot")
+
+  suppressPackageStartupMessages(library(Seurat))
+  data("pbmc_small", package = "SeuratObject")
+  pbmc_small <- suppressWarnings(RunPCA(pbmc_small, npcs = 10, verbose = FALSE))
+
+  r_no_log <- RunWeightedUMAP(pbmc_small, dims = 1:5, weight.by = "prop.var",
+                               log.scale = FALSE, n.neighbors = 5L, verbose = FALSE)
+  r_log    <- RunWeightedUMAP(pbmc_small, dims = 1:5, weight.by = "prop.var",
+                               log.scale = TRUE,  n.neighbors = 5L, verbose = FALSE)
+
+  expect_false(isTRUE(all.equal(Embeddings(r_no_log[["wt.umap"]]),
+                                Embeddings(r_log[["wt.umap"]]))))
+})
+
+test_that("log.scale errors on non-logical input", {
+  skip_if_not_installed("Seurat")
+
+  suppressPackageStartupMessages(library(Seurat))
+  data("pbmc_small", package = "SeuratObject")
+  pbmc_small <- suppressWarnings(RunPCA(pbmc_small, npcs = 5, verbose = FALSE))
+
+  expect_error(
+    RunWeightedUMAP(pbmc_small, dims = 1:5, log.scale = "yes", verbose = FALSE),
+    regexp = "TRUE or FALSE"
+  )
+})

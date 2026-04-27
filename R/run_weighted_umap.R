@@ -38,6 +38,10 @@
 #'   weights are applied.  At `0` all PCs contribute equally, equivalent to
 #'   `weight.by = "none"` (standard UMAP).  Intermediate values blend
 #'   uniformly-weighted and fully-weighted embeddings.
+#' @param log.scale Logical. If `TRUE`, `log1p()` is applied to the weights
+#'   before the `weight.factor` interpolation, compressing the dynamic range
+#'   so that intermediate PCs receive relatively more influence.  Ignored
+#'   when `weight.by = "none"`.  Default: `FALSE`.
 #' @param verbose Print progress messages and per-PC weights? Default: `TRUE`.
 #' @param graph Optional name of a precomputed Seurat KNN graph produced by
 #'   [RunWeightedNeighbors()] (e.g. `"wt_nn"`).  When supplied, UMAP is run
@@ -106,6 +110,7 @@ RunWeightedUMAP <- function(
     spread         = 1,
     seed.use       = 42L,
     weight.factor  = 1,
+    log.scale      = FALSE,
     verbose        = TRUE,
     ...
 ) {
@@ -124,6 +129,10 @@ RunWeightedUMAP <- function(
       weight.factor < 0 || weight.factor > 1) {
     stop("'weight.factor' must be a single number between 0 and 1.",
          call. = FALSE)
+  }
+
+  if (!is.logical(log.scale) || length(log.scale) != 1) {
+    stop("'log.scale' must be TRUE or FALSE.", call. = FALSE)
   }
 
   # ── Graph-based path (uses weighted embedding that produced the graph) ──────
@@ -274,12 +283,18 @@ RunWeightedUMAP <- function(
     none       = rep(1.0, length(sdev))
   )
 
+  if (log.scale && !identical(weight.by, "none")) {
+    weights <- log1p(weights)
+    weights <- weights / sum(weights)
+  }
+
   if (weight.factor < 1) {
     weights <- (1 - weight.factor) * mean(weights) + weight.factor * weights
   }
 
   if (verbose) {
-    message(sprintf("[wUMAP] Weight scheme : %s (factor = %.2g)", weight.by, weight.factor))
+    message(sprintf("[wUMAP] Weight scheme : %s (factor = %.2g, log.scale = %s)",
+                    weight.by, weight.factor, log.scale))
     message(sprintf("[wUMAP] Dimensions    : %d (dims %d–%d)",
                     length(dims), min(dims), max(dims)))
     max_show <- min(length(weights), 10L)

@@ -19,6 +19,7 @@ RunWeightedUMAP(
   spread = 1,
   seed.use = 42L,
   weight.factor = 1,
+  log.scale = FALSE,
   verbose = TRUE,
   ...
 )
@@ -80,6 +81,11 @@ chosen weighting scheme.  At \code{1} (default) the full variance-derived
 weights are applied.  At \code{0} all PCs contribute equally, equivalent to
 \code{weight.by = "none"} (standard UMAP).  Intermediate values blend
 uniformly-weighted and fully-weighted embeddings.}
+
+\item{log.scale}{Logical. If \code{TRUE}, \code{log1p()} is applied to the weights
+before the \code{weight.factor} interpolation, compressing the dynamic range
+so that intermediate PCs receive relatively more influence.  Ignored
+when \code{weight.by = "none"}.  Default: \code{FALSE}.}
 
 \item{verbose}{Print progress messages and per-PC weights? Default: \code{TRUE}.}
 
