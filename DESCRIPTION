@@ -3,10 +3,12 @@ Title: Variance-Weighted PCA UMAP for Seurat Objects
 Version: 0.1.0
 Authors@R: 
     person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
-Description: Provides RunWeightedUMAP(), a drop-in replacement for Seurat
-    RunUMAP() where each principal component axis is scaled by a weight
-    derived from its percentage of explained variance before manifold
-    learning.
+Description: Provides RunWeightedUMAP() and RunWeightedNeighbors() for use
+    with Seurat objects. Each principal component axis is scaled by a weight
+    derived from its variance contribution before manifold learning, so that
+    biologically informative PCs dominate cell distances. RunWeightedNeighbors()
+    builds KNN/SNN graphs in the same weighted space, ensuring clustering and
+    UMAP share a consistent embedding.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Imports:
