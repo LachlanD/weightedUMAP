@@ -37,6 +37,15 @@
 #' @param seed.use Random seed for reproducibility. Set to `NULL` to skip
 #'   `set.seed()`. Default: `42`.
 #' @param verbose Print progress messages and per-PC weights? Default: `TRUE`.
+#' @param graph Optional name of a precomputed Seurat KNN graph produced by
+#'   [RunWeightedNeighbors()] (e.g. `"wt_nn"`).  When supplied, UMAP is run
+#'   on the weighted PC embedding that generated the graph (stored by
+#'   `RunWeightedNeighbors()` as `"<prefix>.pca"`, where `<prefix>` is derived
+#'   by stripping the `_nn` suffix from the graph name).  This ensures the
+#'   UMAP topology is computed in exactly the same weighted space as the
+#'   clustering graphs.  The `dims`, `weight.by`, `reduction`, and `metric`
+#'   arguments are ignored when `graph` is supplied.  Set `n.neighbors` to
+#'   match the `k.param` used in [RunWeightedNeighbors()].  Default: `NULL`.
 #' @param ... Additional arguments forwarded to [uwot::umap()].
 #'
 #' @return The input Seurat `object` with a new `DimReduc` named
@@ -85,6 +94,7 @@ RunWeightedUMAP <- function(
     reduction      = "pca",
     dims           = NULL,
     weight.by      = c("pct.var", "prop.var", "eigenvalue", "stdev", "none"),
+    graph          = NULL,
     reduction.name = "wt.umap",
     reduction.key  = "wtUMAP_",
     n.neighbors    = 30L,
@@ -106,6 +116,86 @@ RunWeightedUMAP <- function(
   }
 
   weight.by <- match.arg(weight.by)
+
+  # ── Graph-based path (uses weighted embedding that produced the graph) ──────
+  if (!is.null(graph)) {
+    if (!graph %in% names(object@graphs)) {
+      stop(
+        sprintf(
+          "Graph '%s' not found in object. Available graphs: %s",
+          graph,
+          paste(names(object@graphs), collapse = ", ")
+        ),
+        call. = FALSE
+      )
+    }
+
+    # Derive source weighted reduction by convention: "wt_nn" → "wt.pca"
+    prefix          <- sub("_nn$", "", graph)
+    wt_red_name     <- paste0(prefix, ".pca")
+
+    if (!wt_red_name %in% names(object@reductions)) {
+      stop(
+        sprintf(
+          paste0(
+            "Could not find source weighted reduction '%s' (expected to be ",
+            "created by RunWeightedNeighbors() alongside graph '%s'). ",
+            "Available reductions: %s"
+          ),
+          wt_red_name, graph,
+          paste(names(object@reductions), collapse = ", ")
+        ),
+        call. = FALSE
+      )
+    }
+
+    wt_emb     <- Embeddings(object[[wt_red_name]])
+    cell_names <- rownames(wt_emb)
+
+    if (verbose) {
+      message(sprintf(
+        "[wUMAP] Using weighted embedding '%s' (%d cells x %d dims, k = %d)",
+        wt_red_name, nrow(wt_emb), ncol(wt_emb), n.neighbors
+      ))
+    }
+
+    if (!is.null(seed.use)) set.seed(seed.use)
+
+    umap_mat <- uwot::umap(
+      X            = wt_emb,
+      n_neighbors  = as.integer(n.neighbors),
+      n_components = as.integer(n.components),
+      metric       = metric,
+      min_dist     = min.dist,
+      spread       = spread,
+      verbose      = verbose,
+      ...
+    )
+
+    rownames(umap_mat) <- cell_names
+    colnames(umap_mat) <- paste0(reduction.key, seq_len(n.components))
+
+    source_assay <- tryCatch(
+      DefaultAssay(object[[wt_red_name]]),
+      error = function(e) DefaultAssay(object)
+    )
+
+    object[[reduction.name]] <- CreateDimReducObject(
+      embeddings = umap_mat,
+      key        = reduction.key,
+      assay      = source_assay,
+      misc       = list(source.graph = graph)
+    )
+
+    if (verbose) {
+      message(sprintf(
+        "[wUMAP] Stored as reduction '%s'. Access via Embeddings(object[['%s']]).",
+        reduction.name, reduction.name
+      ))
+    }
+
+    return(object)
+  }
 
   if (!reduction %in% names(object@reductions)) {
     stop(

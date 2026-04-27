@@ -87,6 +87,8 @@ RunWeightedUMAP(
   reduction      = "pca",       # source reduction
   dims           = NULL,        # e.g. 1:30; NULL uses all available dims
   weight.by      = "pct.var",   # weighting scheme (see table above)
+  graph          = NULL,        # name of KNN graph from RunWeightedNeighbors()
+                                #   e.g. "wt_nn"; overrides dims/weight.by/reduction
   reduction.name = "wt.umap",   # name stored in the Seurat object
   reduction.key  = "wtUMAP_",   # column prefix: wtUMAP_1, wtUMAP_2, ...
   n.neighbors    = 30L,
@@ -101,6 +103,55 @@ RunWeightedUMAP(
 ```
 
 The returned object gains a new `DimReduc` under `reduction.name`. Its `misc` slot stores the chosen `weight.by`, the `weights` vector, `source.reduction`, and `dims.used` for reproducibility.
+
+---
+
+## Consistent clustering and UMAP
+
+By default, `FindNeighbors()` and `RunUMAP()` each build their own neighbour
+graph — on unweighted PCA scores — so the topology used for clustering and the
+one used for the UMAP embedding can differ.
+
+`RunWeightedNeighbors()` computes the weighted PC embeddings **once**, stores
+them as a `"<prefix>.pca"` reduction, and builds KNN/SNN graphs in that same
+weighted space. When you call `RunWeightedUMAP(graph = "wt_nn", ...)`, it
+looks up that stored weighted embedding and runs UMAP on it directly — so
+clustering and visualisation both operate in the same weighted PC space with
+the same `k`.
+
+> **Note:** the `graph` argument tells `RunWeightedUMAP` *which weighted space*
+> to use (by convention `"wt_nn"` → `"wt.pca"`). The actual UMAP is computed
+> from the embedding, not from the binary adjacency values in the graph.
+
+```r
+library(Seurat)
+library(wUMAP)
+library(patchwork)
+
+# Step 1 — build weighted KNN/SNN graphs (k = 20 by default)
+#           stores 'wt.pca' embedding and 'wt_nn' / 'wt_snn' graphs
+pbmc <- RunWeightedNeighbors(pbmc, dims = 1:30, weight.by = "pct.var",
+                              k.param = 20, graph.name = "wt")
+
+# Step 2 — cluster on the weighted SNN graph
+pbmc <- FindClusters(pbmc, graph.name = "wt_snn")
+
+# Step 3 — UMAP in the same weighted space
+#           set n.neighbors to match the k.param used above
+pbmc <- RunWeightedUMAP(pbmc, graph = "wt_nn", n.neighbors = 20,
+                         reduction.name = "wt.umap")
+
+DimPlot(pbmc, reduction = "wt.umap", label = TRUE)
+```
+
+Compare with the standard (inconsistent) workflow:
+
+```r
+# Standard workflow — neighbour graphs computed independently
+pbmc <- FindNeighbors(pbmc, dims = 1:30)           # unweighted, k = 20
+pbmc <- FindClusters(pbmc)
+pbmc <- RunUMAP(pbmc, dims = 1:30)                 # separate NN computation
+```
 
 ---
 

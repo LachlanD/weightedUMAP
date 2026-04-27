@@ -9,6 +9,7 @@ RunWeightedUMAP(
   reduction = "pca",
   dims = NULL,
   weight.by = c("pct.var", "prop.var", "eigenvalue", "stdev", "none"),
+  graph = NULL,
   reduction.name = "wt.umap",
   reduction.key = "wtUMAP_",
   n.neighbors = 30L,
@@ -44,6 +45,16 @@ One of:
 \item{\code{"none"}}{No weighting; equivalent to standard UMAP on PCA
 scores.}
 }}
+
+\item{graph}{Optional name of a precomputed Seurat KNN graph produced by
+\code{\link[=RunWeightedNeighbors]{RunWeightedNeighbors()}} (e.g. \code{"wt_nn"}).  When supplied, UMAP is run
+on the weighted PC embedding that generated the graph (stored by
+\code{RunWeightedNeighbors()} as \code{"<prefix>.pca"}, where \verb{<prefix>} is derived
+by stripping the \verb{_nn} suffix from the graph name).  This ensures the
+UMAP topology is computed in exactly the same weighted space as the
+clustering graphs.  The \code{dims}, \code{weight.by}, \code{reduction}, and \code{metric}
+arguments are ignored when \code{graph} is supplied.  Set \code{n.neighbors} to
+match the \code{k.param} used in \code{\link[=RunWeightedNeighbors]{RunWeightedNeighbors()}}.  Default: \code{NULL}.}
 
 \item{reduction.name}{Name under which to store the new UMAP reduction in
 \code{object}. Default: \code{"wt.umap"}.}
