@@ -54,10 +54,31 @@
 #' \dontrun{
 #' library(Seurat)
 #' library(wUMAP)
+#' library(patchwork)
 #'
 #' # Assumes pbmc has PCA already run
-#' pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "pct.var")
-#' DimPlot(pbmc, reduction = "wt.umap")
+#'
+#' # Standard UMAP — all PCs weighted equally (weight.by = "none")
+#' pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "none",
+#'                         reduction.name = "umap.std")
+#'
+#' # Weighted UMAP — PCs scaled by % variance explained before embedding,
+#' # so early PCs (more biological signal) dominate cell distances
+#' pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "pct.var",
+#'                         reduction.name = "wt.umap")
+#'
+#' # Other weighting schemes
+#' pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "stdev",
+#'                         reduction.name = "wt.umap.sd")
+#' pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "eigenvalue",
+#'                         reduction.name = "wt.umap.eig")
+#'
+#' # Compare standard vs weighted side by side
+#' p1 <- DimPlot(pbmc, reduction = "umap.std", label = TRUE) +
+#'   ggtitle("Standard UMAP")
+#' p2 <- DimPlot(pbmc, reduction = "wt.umap",  label = TRUE) +
+#'   ggtitle("Weighted UMAP (pct.var)")
+#' p1 | p2
 #' }
 RunWeightedUMAP <- function(
     object,
