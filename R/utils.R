@@ -74,7 +74,7 @@
   weights <- switch(
     weight.by,
     prop.var   = sdev^2 / sum(sdev^2),
-    stdev      = sdev,
+    stdev      = sdev / sum(sdev),
     none       = rep(1.0, length(sdev))
   )
 

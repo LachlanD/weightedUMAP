@@ -16,7 +16,7 @@
 #'   \describe{
 #'     \item{`"prop.var"`}{Proportion of variance explained
 #'       (`sdev^2 / sum(sdev^2)`). Default.}
-#'     \item{`"stdev"`}{Standard deviation (`sdev`).}
+#'     \item{`"stdev"`}{Standard deviation, normalised (`sdev / sum(sdev)`).}
 #'     \item{`"none"`}{No weighting; equivalent to standard UMAP on PCA
 #'       scores.}
 #'   }
@@ -270,7 +270,7 @@ RunWeightedUMAP <- function(
   weights <- switch(
     weight.by,
     prop.var   = sdev^2 / sum(sdev^2),
-    stdev      = sdev,
+    stdev      = sdev / sum(sdev),
     none       = rep(1.0, length(sdev))
   )
 

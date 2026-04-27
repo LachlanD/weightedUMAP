@@ -34,7 +34,7 @@ One of:
 \describe{
 \item{\code{"prop.var"}}{Proportion of variance explained
 (\code{sdev^2 / sum(sdev^2)}). Default.}
-\item{\code{"stdev"}}{Standard deviation (\code{sdev}).}
+\item{\code{"stdev"}}{Standard deviation, normalised (\code{sdev / sum(sdev)}).}
 \item{\code{"none"}}{No weighting; equivalent to standard UMAP on PCA
 scores.}
 }}

@@ -57,7 +57,7 @@ pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "prop.var",
 | `weight.by`   | Weight applied to PC _i_              | Description                          |
 |---------------|---------------------------------------|--------------------------------------|
 | `"prop.var"`  | `sdevᵢ² / Σ sdev²`                   | Proportion of variance explained (default) |
-| `"stdev"`     | `sdevᵢ`                               | Standard deviation                   |
+| `"stdev"`     | `sdevᵢ / Σ sdev`                      | Standard deviation (normalised)      |
 | `"none"`      | `1`                                   | No weighting — equivalent to standard UMAP |
 
 ```r
