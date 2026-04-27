@@ -153,6 +153,16 @@ RunWeightedUMAP <- function(
     }
 
     # Derive source weighted reduction by convention: "wt_nn" → "wt.pca"
+    if (grepl("_snn$", graph)) {
+      stop(
+        sprintf(
+          "Graph '%s' is an SNN graph and cannot be used directly for UMAP. ",
+          graph
+        ),
+        "Pass the corresponding KNN graph instead (replace '_snn' with '_nn').",
+        call. = FALSE
+      )
+    }
     prefix          <- sub("_nn$", "", graph)
     wt_red_name     <- paste0(prefix, ".pca")
 
