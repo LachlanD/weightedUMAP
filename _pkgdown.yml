@@ -1,5 +1,12 @@
 url: https://lachland.github.io/weightedUMAP/
 
+repo:
+  url:
+    home:   https://github.com/LachlanD/weightedUMAP
+    source: https://github.com/LachlanD/weightedUMAP/blob/HEAD/
+    issue:  https://github.com/LachlanD/weightedUMAP/issues/
+    user:   https://github.com/
+
 template:
   bootstrap: 5
 

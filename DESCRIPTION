@@ -11,6 +11,8 @@ Description: Provides RunWeightedUMAP() and RunWeightedNeighbors() for use
     builds KNN/SNN graphs in the same weighted space, ensuring clustering and
     UMAP share a consistent embedding.
 License: MIT + file LICENSE
+URL: https://lachland.github.io/weightedUMAP/, https://github.com/LachlanD/weightedUMAP
+BugReports: https://github.com/LachlanD/weightedUMAP/issues
 Encoding: UTF-8
 Imports:
     uwot,
