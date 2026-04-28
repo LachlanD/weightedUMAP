@@ -11,7 +11,7 @@ RunWeightedUMAP(
   object,
   reduction = "pca",
   dims = NULL,
-  weight.by = c("prop.var", "stdev", "none"),
+  weight.by = c("prop.var", "stdev", "mp", "none"),
   graph = NULL,
   reduction.name = "wt.umap",
   reduction.key = "wtUMAP_",

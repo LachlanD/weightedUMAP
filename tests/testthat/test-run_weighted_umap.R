@@ -188,3 +188,54 @@ test_that("log.scale errors on non-logical input", {
     regexp = "TRUE or FALSE"
   )
 })
+
+test_that("weight.by = 'mp' produces Marchenko-Pastur weighted UMAP", {
+  skip_if_not_installed("Seurat")
+  skip_if_not_installed("uwot")
+
+  suppressPackageStartupMessages(library(Seurat))
+  data("pbmc_small", package = "SeuratObject")
+  pbmc_small <- suppressWarnings(RunPCA(pbmc_small, npcs = 10, verbose = FALSE))
+
+  result <- RunWeightedUMAP(
+    pbmc_small,
+    dims        = 1:5,
+    weight.by   = "mp",
+    n.neighbors = 5L,
+    verbose     = FALSE
+  )
+
+  emb <- Embeddings(result[["wt.umap"]])
+  expect_equal(nrow(emb), ncol(pbmc_small))
+  expect_equal(ncol(emb), 2L)
+
+  misc <- Misc(result[["wt.umap"]])
+  expect_equal(misc$weight.by, "mp")
+  expect_length(misc$weights, 5L)
+  expect_true(all(misc$weights >= 0))
+  # MP weights should sum to 1 (or if fallback triggered, still sum to 1)
+  expect_equal(sum(misc$weights), 1, tolerance = 1e-10)
+})
+
+test_that("weight.by = 'mp' differs from prop.var embedding", {
+  skip_if_not_installed("Seurat")
+  skip_if_not_installed("uwot")
+
+  suppressPackageStartupMessages(library(Seurat))
+  data("pbmc_small", package = "SeuratObject")
+  pbmc_small <- suppressWarnings(RunPCA(pbmc_small, npcs = 10, verbose = FALSE))
+
+  set.seed(1L)
+  r_pv <- RunWeightedUMAP(pbmc_small, dims = 1:5, weight.by = "prop.var",
+                          n.neighbors = 5L, verbose = FALSE)
+  set.seed(1L)
+  r_mp <- RunWeightedUMAP(pbmc_small, dims = 1:5, weight.by = "mp",
+                          n.neighbors = 5L, verbose = FALSE,
+                          reduction.name = "wt.umap.mp")
+
+  # The two methods produce different weight vectors
+  expect_false(isTRUE(all.equal(
+    Misc(r_pv[["wt.umap"]])$weights,
+    Misc(r_mp[["wt.umap.mp"]])$weights
+  )))
+})

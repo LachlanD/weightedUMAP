@@ -103,7 +103,7 @@ RunWeightedUMAP <- function(
     object,
     reduction      = "pca",
     dims           = NULL,
-    weight.by      = c("prop.var", "stdev", "none"),
+    weight.by      = c("prop.var", "stdev", "mp", "none"),
     graph          = NULL,
     reduction.name = "wt.umap",
     reduction.key  = "wtUMAP_",
@@ -240,88 +240,13 @@ RunWeightedUMAP <- function(
     )
   }
 
-  # ── Extract embeddings & standard deviations ────────────────────────────────
-  emb_full  <- Embeddings(object[[reduction]])   # cells × dims
-  sdev_full <- Stdev(object[[reduction]])         # numeric vector, length = dims
-
-  if (length(sdev_full) == 0) {
-    stop(
-      sprintf(
-        "No standard deviations found for reduction '%s'. ",
-        reduction
-      ),
-      "Ensure you ran PCA with Seurat (e.g. RunPCA()) so that stdev values ",
-      "are stored.",
-      call. = FALSE
-    )
-  }
-
-  n_dims_available <- min(ncol(emb_full), length(sdev_full))
-
-  if (is.null(dims)) {
-    if (n_dims_available > 50) {
-      warning(
-        sprintf(
-          "'dims' not specified and %d dimensions are available. ",
-          n_dims_available
-        ),
-        "Using all of them. Consider supplying 'dims' explicitly, e.g. ",
-        "dims = 1:30.",
-        call. = FALSE
-      )
-    }
-    dims <- seq_len(n_dims_available)
-  } else {
-    dims <- as.integer(dims)
-    bad  <- dims[dims < 1 | dims > n_dims_available]
-    if (length(bad) > 0) {
-      stop(
-        sprintf(
-          "Requested dims (%s) exceed available range (1:%d).",
-          paste(bad, collapse = ", "),
-          n_dims_available
-        ),
-        call. = FALSE
-      )
-    }
-  }
-
-  emb  <- emb_full[, dims, drop = FALSE]
-  sdev <- sdev_full[dims]
-
-  # ── Compute weights ──────────────────────────────────────────────────────────
-  weights <- switch(
-    weight.by,
-    prop.var   = sdev^2 / sum(sdev^2),
-    stdev      = sdev / sum(sdev),
-    none       = rep(1.0, length(sdev))
-  )
-
-  if (log.scale && !identical(weight.by, "none")) {
-    weights <- log1p(weights)
-    weights <- weights / sum(weights)
-  }
-
-  if (weight.factor < 1) {
-    weights <- (1 - weight.factor) * mean(weights) + weight.factor * weights
-  }
-
-  if (verbose) {
-    message(sprintf("[wUMAP] Weight scheme : %s (factor = %.2g, log.scale = %s)",
-                    weight.by, weight.factor, log.scale))
-    message(sprintf("[wUMAP] Dimensions    : %d (dims %d–%d)",
-                    length(dims), min(dims), max(dims)))
-    max_show <- min(length(weights), 10L)
-    wt_str   <- paste(
-      sprintf("PC%d=%.3g", dims[seq_len(max_show)], weights[seq_len(max_show)]),
-      collapse = ", "
-    )
-    if (length(weights) > 10L) wt_str <- paste0(wt_str, ", ...")
-    message(sprintf("[wUMAP] Weights       : %s", wt_str))
-  }
-
-  # ── Scale embeddings ─────────────────────────────────────────────────────────
-  weighted_emb <- sweep(emb, 2L, weights, `*`)
+  # ── Compute weighted embeddings via shared helper ────────────────────────────
+  wt           <- .compute_weighted_embeddings(object, reduction, dims,
+                                               weight.by, weight.factor,
+                                               log.scale, verbose)
+  emb          <- wt$emb
+  weighted_emb <- wt$weighted_emb
+  dims         <- wt$dims
 
   # ── Run UMAP ─────────────────────────────────────────────────────────────────
   if (!is.null(seed.use)) set.seed(seed.use)
@@ -353,7 +278,7 @@ RunWeightedUMAP <- function(
     assay      = source_assay,
     misc       = list(
       weight.by        = weight.by,
-      weights          = weights,
+      weights          = wt$weights,
       source.reduction = reduction,
       dims.used        = dims
     )

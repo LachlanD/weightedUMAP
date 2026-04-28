@@ -75,7 +75,45 @@
     weight.by,
     prop.var   = sdev^2 / sum(sdev^2),
     stdev      = sdev / sum(sdev),
-    none       = rep(1.0, length(sdev))
+    none       = rep(1.0, length(sdev)),
+    mp         = {
+      # Marchenko-Pastur weighting: weight PCs by how much their eigenvalue
+      # exceeds the bulk noise upper bound λ_max = (1 + sqrt(p/n))^2.
+      # PCs at or below the noise floor get weight 0.
+      n        <- nrow(emb)
+      p        <- tryCatch(nrow(object[[reduction]]@feature.loadings),
+                           error = function(e) NULL)
+      if (is.null(p) || p == 0L) {
+        warning(
+          "Could not determine number of PCA features for Marchenko-Pastur ",
+          "threshold. Falling back to 'prop.var' weighting.",
+          call. = FALSE
+        )
+        sdev^2 / sum(sdev^2)
+      } else {
+        gamma    <- p / n
+        lam_max  <- (1 + sqrt(gamma))^2   # MP upper bound (sigma^2 = 1)
+        excess   <- pmax(0, sdev^2 - lam_max)
+        if (sum(excess) == 0) {
+          warning(
+            "No PCs exceed the Marchenko-Pastur noise threshold ",
+            sprintf("(lambda_max = %.3g, n = %d, p = %d). ", lam_max, n, p),
+            "All PCs may be noise — falling back to 'prop.var' weighting.",
+            call. = FALSE
+          )
+          sdev^2 / sum(sdev^2)
+        } else {
+          if (verbose) {
+            n_signal <- sum(excess > 0)
+            message(sprintf(
+              "[wUMAP] MP threshold  : lambda_max = %.3g (%d/%d PCs above noise floor)",
+              lam_max, n_signal, length(sdev)
+            ))
+          }
+          excess / sum(excess)
+        }
+      }
+    }
   )
 
   # ── Apply log scaling ────────────────────────────────────────────────────────────────────

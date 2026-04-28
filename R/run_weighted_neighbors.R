@@ -78,7 +78,7 @@ RunWeightedNeighbors <- function(
     object,
     reduction      = "pca",
     dims           = NULL,
-    weight.by      = c("prop.var", "stdev", "none"),
+    weight.by      = c("prop.var", "stdev", "mp", "none"),
     k.param        = 20L,
     reduction.name = "wt.pca",
     reduction.key  = "wtPCA_",
