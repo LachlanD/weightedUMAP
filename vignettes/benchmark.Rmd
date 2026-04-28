@@ -367,9 +367,17 @@ match or surpass global weighting on trajectory-like or heterogeneous datasets,
 but on PBMC data with a dominant monocyte–lymphocyte axis the global and local
 distances may perform similarly.
 
-**Recommendation**: start with the default `weight.by = "stdev"` for global
-methods and `local.weight.by = "stdev"` (also the default) for local PCA. Use
-`mp.filter = TRUE` at either level when you want a principled noise threshold.
-Prefer `RunLocalPCANeighbors()` + `RunLocalPCAUMAP()` over flat global
-weighting when the dataset has strong local anisotropic structure (trajectories,
-gradients) that a single global metric would miss.
+**Note on interpretation**: all wUMAP weighting schemes are heuristic
+modifications of the input distance metric — they are not derived from a
+statistical model of scRNA-seq noise.  On this PBMC dataset the differences
+between methods tend to be small.  The benchmark measures whether the
+heuristics help; results will vary by dataset.
+
+**Recommendation**: the default `weight.by = "stdev"` / `local.weight.by =
+"stdev"` applies the mildest transformation and is a reasonable starting
+point.  Use `mp.filter = TRUE` to additionally zero PCs below the
+Marchenko-Pastur noise ceiling (a principled threshold, though calibrated for
+i.i.d. Gaussian data and therefore approximate on scRNA-seq).  Try
+`RunLocalPCANeighbors()` + `RunLocalPCAUMAP()` when you suspect the data has
+locally anisotropic structure (trajectories, gradients), but verify empirically
+that it helps.

@@ -41,8 +41,8 @@ Analogous to \code{weight.by} in \code{\link{RunWeightedUMAP}}, but
 applied to the \emph{local} singular values of each neighbourhood SVD.
 \describe{
 \item{\code{"stdev"}}{Weight by local standard deviation
-(\eqn{s_l / \sum s}).  Default.  Gently emphasises the dominant
-local direction without collapsing minor variation.}
+(\eqn{s_l / \sum s}).  Default.  Mildest heuristic weighting of
+local PC directions.}
 \item{\code{"prop.var"}}{Weight each local PC by its proportion of
 local variance (\eqn{s_l^2 / \sum s^2}); more aggressively
 emphasises the leading local direction.}
@@ -84,15 +84,15 @@ The input Seurat \code{object} with a new DimReduc stored under
 \description{
 Computes UMAP using a \strong{local PCA metric}: for each cell, the distance to
 each of its \eqn{k} nearest neighbours is re-measured in a locally-fitted
-PCA basis built from that neighbourhood.  This captures anisotropic local
-structure (e.g. the tangent direction of a trajectory) and de-emphasises
-transverse noise, producing a richer distance measure than a single global
-Euclidean metric.
+PCA basis built from that neighbourhood.  Projecting displacements onto
+the dominant local directions has geometric motivation for manifold-structured
+data, but whether it improves clustering quality is dataset-dependent.
 }
 \details{
 Optionally, each local PC direction can be weighted by its local variance
-contribution (\code{local.weight.by}), analogous to how \code{weight.by}
-weights global PCs in \code{\link{RunWeightedUMAP}}.
+contribution (\code{local.weight.by}).  This is an additional heuristic
+analogous to the global \code{weight.by} schemes in
+\code{\link{RunWeightedUMAP}}.
 }
 \section{Algorithm}{
 

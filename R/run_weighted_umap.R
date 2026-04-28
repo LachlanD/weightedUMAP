@@ -15,9 +15,8 @@
 #'   One of:
 #'   \describe{
 #'     \item{`"stdev"`}{Standard deviation, normalised (`sdev / sum(sdev)`).
-#'       Default. Gently up-weights early PCs while keeping intermediate ones
-#'       in play, giving a good balance between signal emphasis and layout
-#'       completeness.}
+#'       Default. Mildest transformation — early PCs receive somewhat more
+#'       weight.  Whether this improves results is dataset-dependent.}
 #'     \item{`"prop.var"`}{Proportion of variance explained
 #'       (`sdev^2 / sum(sdev^2)`); more aggressively up-weights the dominant
 #'       PCs.  Use with `weight.factor < 1` or `log.scale = TRUE` to avoid

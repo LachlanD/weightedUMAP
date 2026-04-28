@@ -53,7 +53,7 @@
 #' library(Seurat)
 #' library(wUMAP)
 #'
-#' # 1. Compute weighted KNN/SNN graphs — stdev weighting (default, recommended)
+#' # 1. Compute weighted KNN/SNN graphs — stdev weighting (default)
 #' pbmc <- RunWeightedNeighbors(pbmc, dims = 1:30, prefix = "wt")
 #'
 #' # 2. Cluster on the weighted SNN graph

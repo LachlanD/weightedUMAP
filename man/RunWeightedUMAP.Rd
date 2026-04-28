@@ -40,9 +40,8 @@ than 50.}
 One of:
 \describe{
 \item{\code{"stdev"}}{Standard deviation, normalised (\code{sdev / sum(sdev)}).
-Default. Gently up-weights early PCs while keeping intermediate ones
-in play, giving a good balance between signal emphasis and layout
-completeness.}
+Default. Mildest transformation — early PCs receive somewhat more
+weight.  Whether this improves results is dataset-dependent.}
 \item{\code{"prop.var"}}{Proportion of variance explained
 (\code{sdev^2 / sum(sdev^2)}); more aggressively up-weights the dominant
 PCs.  Use with \code{weight.factor < 1} or \code{log.scale = TRUE} to avoid

@@ -26,10 +26,13 @@ early PCs capture far more biological variation than later ones — yet a
 standard UMAP over PCs 1–50 weights PC 50 the same as PC 1.
 
 **wUMAP** scales each PC axis by a weight derived from its variance contribution
-before handing the embedding to UMAP, so biologically informative PCs dominate
-cell distances in the final layout.  The recommended default scheme is
-`weight.by = "stdev"`, which gently up-weights early PCs while keeping
-intermediate ones in play.
+before handing the embedding to UMAP, giving more influence to early PCs in
+cell distance calculations.  These weighting schemes are **heuristic**: they
+change the input metric to UMAP but are not derived from a statistical model
+of how scRNA-seq noise is structured.  Whether any scheme improves results
+depends on the dataset; the benchmark vignette shows effects are often marginal.
+The default scheme is `weight.by = "stdev"` (normalised standard deviation),
+which applies the mildest transformation.
 
 ## Setup
 
@@ -81,7 +84,7 @@ Three schemes are available via `weight.by`:
 
 | Value | Weight formula | Effect |
 |---|---|---|
-| `"stdev"` | $w_i = \sigma_i / \sum \sigma$ | **Default.** Gentle emphasis on early PCs; keeps intermediate PCs in play. |
+| `"stdev"` | $w_i = \sigma_i / \sum \sigma$ | **Default.** Mildest transformation; early PCs weighted slightly more heavily. |
 | `"prop.var"` | $w_i = \sigma_i^2 / \sum \sigma^2$ | Stronger up-weighting; use with `weight.factor < 1` on PC-1-dominated data. |
 | `"none"` | $w_i = 1/d$ | Standard UMAP (equal weights). |
 
@@ -204,11 +207,14 @@ DimPlot(pbmc, reduction = "umap.consistent", label = TRUE, repel = TRUE) +
 
 ## Local PCA UMAP
 
-`RunLocalPCAUMAP()` is a more principled alternative to global variance
-weighting. Rather than rescaling PC axes globally, it measures the distance
-between every pair of neighbours in a **locally-fitted PCA basis** — capturing
-the predominant direction of variation in each cell's neighbourhood (e.g. the
-tangent of a trajectory) and de-emphasising transverse noise.
+`RunLocalPCAUMAP()` takes a different approach to modifying the input metric.
+Rather than rescaling PC axes globally, it measures the distance between every
+pair of neighbours in a **locally-fitted PCA basis** — projecting displacements
+onto the directions of greatest variance within each cell's neighbourhood.
+The projection step itself (without any weighting) has geometric motivation for
+manifold-structured data.  The optional `local.weight.by` re-weighting of local
+PC directions is an additional heuristic layered on top, analogous to the
+global `weight.by` schemes.
 
 The `local.weight.by` parameter (default `"stdev"`) additionally weights each
 local PC direction by its contribution to local variance, analogous to how
@@ -251,9 +257,10 @@ p_lp  <- DimPlot(pbmc, reduction = "lp.umap",   label = TRUE, repel = TRUE) +
 p_std | p_lp
 ```
 
-The local PCA approach can reveal trajectory-like structure that is compressed
-in standard UMAP because the distance metric is insensitive to the predominant
-local direction of variation.
+The local PCA approach can sometimes reveal trajectory-like structure more
+clearly than standard UMAP, but on datasets with broadly isotropic
+neighbourhoods the improvement may be small.  See the benchmark vignette for
+a quantitative comparison.
 
 ## Further reading
 
