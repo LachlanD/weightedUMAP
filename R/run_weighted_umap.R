@@ -89,13 +89,9 @@
 #' # Weighted UMAP — PCs scaled by standard deviation (default, recommended)
 #' pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, reduction.name = "wt.umap")
 #'
-#' # Standard UMAP — all PCs weighted equally
+#' # Standard UMAP for comparison — all PCs weighted equally
 #' pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "none",
 #'                         reduction.name = "umap.std")
-#'
-#' # Proportion-of-variance weighting — more aggressive up-weighting of early PCs
-#' pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "prop.var",
-#'                         reduction.name = "wt.umap.pv")
 #'
 #' # MP filtering: zero out noise PCs, then apply stdev weights to signal PCs
 #' pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, mp.filter = TRUE,
@@ -106,9 +102,6 @@
 #'   ggtitle("Standard UMAP")
 #' p2 <- DimPlot(pbmc, reduction = "wt.umap",  label = TRUE) +
 #'   ggtitle("Weighted UMAP (stdev)")
-#' p1 | p2
-#' }
-#'   ggtitle("Weighted UMAP (prop.var, log.scale)")
 #' p1 | p2
 #' }
 RunWeightedUMAP <- function(

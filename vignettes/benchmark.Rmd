@@ -164,19 +164,59 @@ distances and stores them for consistent clustering and visualisation.
 Using the same `k.param` and `local.weight.by` for both the graph and the UMAP
 step ensures clustering and layout share identical distances.
 
+We test all three `local.weight.by` schemes plus `mp.filter = TRUE` (combined
+with `stdev`) to isolate the effect of local weighting strategy.
+
 ```{r local-pca}
 set.seed(42)
 
-# Weighted local PCA: build KNN/SNN graphs with stdev-weighted local distances,
-# then cluster and visualise from the same graph.
+# stdev (default)
 cbmc <- RunLocalPCANeighbors(cbmc, dims = 1:30, k.param = 30,
+                             local.weight.by = "stdev",
                              prefix = "lp", verbose = FALSE)
 cbmc <- FindClusters(cbmc, graph.name = "lp_snn", resolution = 0.8,
                      verbose = FALSE)
 cbmc <- RunLocalPCAUMAP(cbmc, dims = 1:30, k.param = 30,
+                        local.weight.by = "stdev",
                         reduction.name = "umap.lp", verbose = FALSE)
-ari_lp <- adjustedRandIndex(cbmc$seurat_clusters, cbmc$protein_annotations)
-pur_lp <- knn_purity(Embeddings(cbmc, "umap.lp"), cbmc$protein_annotations)
+ari_lp     <- adjustedRandIndex(cbmc$seurat_clusters, cbmc$protein_annotations)
+pur_lp     <- knn_purity(Embeddings(cbmc, "umap.lp"), cbmc$protein_annotations)
+
+# prop.var (aggressive local weighting)
+cbmc <- RunLocalPCANeighbors(cbmc, dims = 1:30, k.param = 30,
+                             local.weight.by = "prop.var",
+                             prefix = "lp.pv", verbose = FALSE)
+cbmc <- FindClusters(cbmc, graph.name = "lp.pv_snn", resolution = 0.8,
+                     verbose = FALSE)
+cbmc <- RunLocalPCAUMAP(cbmc, dims = 1:30, k.param = 30,
+                        local.weight.by = "prop.var",
+                        reduction.name = "umap.lp.pv", verbose = FALSE)
+ari_lp_pv  <- adjustedRandIndex(cbmc$seurat_clusters, cbmc$protein_annotations)
+pur_lp_pv  <- knn_purity(Embeddings(cbmc, "umap.lp.pv"), cbmc$protein_annotations)
+
+# none (unweighted local PCA, isotropic)
+cbmc <- RunLocalPCANeighbors(cbmc, dims = 1:30, k.param = 30,
+                             local.weight.by = "none",
+                             prefix = "lp.none", verbose = FALSE)
+cbmc <- FindClusters(cbmc, graph.name = "lp.none_snn", resolution = 0.8,
+                     verbose = FALSE)
+cbmc <- RunLocalPCAUMAP(cbmc, dims = 1:30, k.param = 30,
+                        local.weight.by = "none",
+                        reduction.name = "umap.lp.none", verbose = FALSE)
+ari_lp_none <- adjustedRandIndex(cbmc$seurat_clusters, cbmc$protein_annotations)
+pur_lp_none <- knn_purity(Embeddings(cbmc, "umap.lp.none"), cbmc$protein_annotations)
+
+# stdev + mp.filter (noise-PC zeroing post-weighting)
+cbmc <- RunLocalPCANeighbors(cbmc, dims = 1:30, k.param = 30,
+                             local.weight.by = "stdev", mp.filter = TRUE,
+                             prefix = "lp.mp", verbose = FALSE)
+cbmc <- FindClusters(cbmc, graph.name = "lp.mp_snn", resolution = 0.8,
+                     verbose = FALSE)
+cbmc <- RunLocalPCAUMAP(cbmc, dims = 1:30, k.param = 30,
+                        local.weight.by = "stdev", mp.filter = TRUE,
+                        reduction.name = "umap.lp.mp", verbose = FALSE)
+ari_lp_mp  <- adjustedRandIndex(cbmc$seurat_clusters, cbmc$protein_annotations)
+pur_lp_mp  <- knn_purity(Embeddings(cbmc, "umap.lp.mp"), cbmc$protein_annotations)
 ```
 
 ## Results
@@ -191,18 +231,21 @@ results <- data.frame(
     "prop.var  wf=1",
     "prop.var + log.scale",
     "stdev + mp.filter",
-    "local PCA UMAP (stdev)"
+    "local PCA (stdev)",
+    "local PCA (prop.var)",
+    "local PCA (none)",
+    "local PCA (stdev + mp.filter)"
   ),
   ARI       = c(ari_std, ari_sd, ari_sd_log, ari_pv05, ari_pv, ari_pv_log,
-                ari_mp, ari_lp),
+                ari_mp, ari_lp, ari_lp_pv, ari_lp_none, ari_lp_mp),
   kNN_purity = c(pur_std, pur_sd, pur_sd_log, pur_pv05, pur_pv, pur_pv_log,
-                 pur_mp, pur_lp)
+                 pur_mp, pur_lp, pur_lp_pv, pur_lp_none, pur_lp_mp)
 )
 knitr::kable(results, digits = 3,
   caption = "Clustering quality vs protein labels on cbmc CITE-seq (n ≈ 7,699 cells).")
 ```
 
-```{r results-plot, fig.height=6, fig.cap="ARI and k-NN purity for each method. Dashed line = standard UMAP baseline. ARI is not shown for local PCA UMAP (embedding-only method)."}
+```{r results-plot, fig.height=8, fig.cap="ARI and k-NN purity for each method. Dashed line = standard UMAP baseline."}
 library(tidyr)
 
 res_long <- tidyr::pivot_longer(results, cols = c("ARI", "kNN_purity"),
@@ -230,7 +273,7 @@ ggplot(res_long[!is.na(res_long$Score), ],
 
 ## UMAP layouts coloured by protein label
 
-```{r umap-grid, fig.height=16, fig.cap="All methods coloured by ADT-derived protein label."}
+```{r umap-grid, fig.height=24, fig.cap="All methods coloured by ADT-derived protein label."}
 Idents(cbmc) <- "protein_annotations"
 
 plots <- list(
@@ -249,7 +292,13 @@ plots <- list(
   DimPlot(cbmc, reduction = "umap.mp",    label = TRUE, repel = TRUE) +
     ggtitle(sprintf("stdev+mp.filter  ARI=%.3f", ari_mp)) + NoLegend(),
   DimPlot(cbmc, reduction = "umap.lp",    label = TRUE, repel = TRUE) +
-    ggtitle(sprintf("local PCA (stdev)  ARI=%.3f", ari_lp)) + NoLegend()
+    ggtitle(sprintf("local PCA stdev  ARI=%.3f", ari_lp)) + NoLegend(),
+  DimPlot(cbmc, reduction = "umap.lp.pv", label = TRUE, repel = TRUE) +
+    ggtitle(sprintf("local PCA prop.var  ARI=%.3f", ari_lp_pv)) + NoLegend(),
+  DimPlot(cbmc, reduction = "umap.lp.none", label = TRUE, repel = TRUE) +
+    ggtitle(sprintf("local PCA none  ARI=%.3f", ari_lp_none)) + NoLegend(),
+  DimPlot(cbmc, reduction = "umap.lp.mp", label = TRUE, repel = TRUE) +
+    ggtitle(sprintf("local PCA stdev+mp.filter  ARI=%.3f", ari_lp_mp)) + NoLegend()
 )
 
 wrap_plots(plots, ncol = 2)
@@ -264,27 +313,63 @@ finer lymphocyte subtypes together.
 
 Key takeaways:
 
-- **`stdev`** is the safest default — only a marginal ARI change, same k-NN
-  purity as standard.
+- **`stdev`** is the safest global default — only a marginal ARI change, same
+  k-NN purity as standard.
 - **`prop.var` with `weight.factor = 0.5`** (partial blend) avoids the worst
   of over-emphasising PC 1.
 - **`log.scale = TRUE`** partially mitigates PC 1 dominance and recovers some
   ARI compared to full `prop.var`.
-- **`mp.filter = TRUE`** (here combined with `stdev`) automatically zeros out
-  noise PCs whose variance is below the Marchenko–Pastur ceiling, then applies
-  the chosen weighting to the remaining signal PCs. On datasets where most PCs
-  are genuine signal it behaves like the base scheme; on noisier datasets it
-  can sharpen clusters by discarding uninformative PCs entirely.
-- **Local PCA (stdev)** uses per-neighbourhood SVD distances weighted by local
-  standard deviation, with `RunLocalPCANeighbors()` providing consistent
-  clustering and UMAP graphs. It is now a fully integrated workflow comparable
-  to the global weighting methods.
-- k-NN purity differences are generally small across all methods, indicating
-  UMAP topology is broadly preserved — the main effect is on Louvain cluster
-  resolution.
+- **`mp.filter = TRUE`** (global: combined with `stdev`) automatically zeros
+  out noise PCs whose variance is below the Marchenko–Pastur ceiling. On
+  datasets where most PCs are genuine signal it behaves like the base scheme;
+  on noisier datasets it can sharpen clusters.
 
-**Recommendation**: start with the default `weight.by = "stdev"`, and use
-`mp.filter = TRUE` when you want a principled, data-driven noise threshold.
-Use `RunLocalPCANeighbors()` + `RunLocalPCAUMAP()` when you suspect the dataset
-has strong local anisotropic structure (trajectories, gradients) that a global
-metric would miss.
+### Local PCA results
+
+The four local PCA variants differ in how per-neighbourhood singular values are
+combined into a distance:
+
+| Setting | What it does |
+|---|---|
+| `local.weight.by = "stdev"` | Weights each local PC by its local std dev — gently emphasises dominant local directions |
+| `local.weight.by = "prop.var"` | Weights by proportion of local variance — more aggressive emphasis on the leading local direction |
+| `local.weight.by = "none"` | Equal weight to all local PCs — isotropic local PCA distance |
+| `stdev + mp.filter = TRUE` | Runs stdev weighting then zeros local PCs below the per-neighbourhood MP noise threshold |
+
+```{r local-pca-summary}
+lp_results <- results[results$Method %in% c(
+  "local PCA (stdev)", "local PCA (prop.var)",
+  "local PCA (none)", "local PCA (stdev + mp.filter)"
+), ]
+best_lp  <- lp_results$Method[which.max(lp_results$ARI)]
+worst_lp <- lp_results$Method[which.min(lp_results$ARI)]
+```
+
+Among the local PCA variants, **`r best_lp`** achieves the highest ARI
+(`r round(lp_results$ARI[lp_results$Method == best_lp], 3)`) and
+**`r worst_lp`** the lowest
+(`r round(lp_results$ARI[lp_results$Method == worst_lp], 3)`).
+
+In general:
+
+- If all local PCA variants score similarly to each other, the local graph
+  structure (rather than the weighting scheme) is the dominant factor; the
+  `stdev` default is sufficient.
+- If `prop.var` outperforms `stdev`, the dataset has strong anisotropic local
+  structure and aggressive local direction emphasis pays off.
+- If `none` is competitive, the data has broadly isotropic neighbourhoods and
+  local weighting adds little.
+- If `stdev + mp.filter` outperforms plain `stdev`, per-neighbourhood noise PCs
+  were degrading the distance estimate and zeroing them helps.
+
+Comparing local PCA methods against global methods: local PCA will typically
+match or surpass global weighting on trajectory-like or heterogeneous datasets,
+but on PBMC data with a dominant monocyte–lymphocyte axis the global and local
+distances may perform similarly.
+
+**Recommendation**: start with the default `weight.by = "stdev"` for global
+methods and `local.weight.by = "stdev"` (also the default) for local PCA. Use
+`mp.filter = TRUE` at either level when you want a principled noise threshold.
+Prefer `RunLocalPCANeighbors()` + `RunLocalPCAUMAP()` over flat global
+weighting when the dataset has strong local anisotropic structure (trajectories,
+gradients) that a single global metric would miss.

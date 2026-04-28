@@ -121,3 +121,30 @@ Scales each principal component embedding by a weight derived from the
 variance explained by that component, then runs UMAP via \pkg{uwot}.
 The result is stored as a new \code{DimReduc} in the returned Seurat object.
 }
+\examples{
+\dontrun{
+library(Seurat)
+library(wUMAP)
+library(patchwork)
+
+# Assumes pbmc has PCA already run
+
+# Weighted UMAP — PCs scaled by standard deviation (default, recommended)
+pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, reduction.name = "wt.umap")
+
+# Standard UMAP for comparison — all PCs weighted equally
+pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "none",
+                        reduction.name = "umap.std")
+
+# MP filtering: zero out noise PCs, then apply stdev weights to signal PCs
+pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, mp.filter = TRUE,
+                        reduction.name = "wt.umap.mp")
+
+# Compare standard vs weighted
+p1 <- DimPlot(pbmc, reduction = "umap.std", label = TRUE) +
+  ggtitle("Standard UMAP")
+p2 <- DimPlot(pbmc, reduction = "wt.umap",  label = TRUE) +
+  ggtitle("Weighted UMAP (stdev)")
+p1 | p2
+}
+}
