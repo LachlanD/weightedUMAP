@@ -74,7 +74,9 @@ ones — yet a standard UMAP over PCs 1–50 weights PC 50 the same as PC
 <p><strong>wUMAP</strong> scales each PC axis by a weight derived from
 its variance contribution before handing the embedding to UMAP, so
 biologically informative PCs dominate cell distances in the final
-layout.</p>
+layout. The recommended default scheme is
+<code>weight.by = "stdev"</code>, which gently up-weights early PCs
+while keeping intermediate ones in play.</p>
 </div>
 <div class="section level2">
 <h2 id="setup">Setup<a class="anchor" aria-label="anchor" href="#setup"></a>
@@ -102,24 +104,25 @@ already applied.</p>
 </h2>
 <p><code><a href="../reference/RunWeightedUMAP.html">RunWeightedUMAP()</a></code> is a drop-in replacement for
 <code><a href="https://satijalab.org/seurat/reference/RunUMAP.html" class="external-link">RunUMAP()</a></code>. Setting <code>weight.by = "none"</code>
-reproduces the standard result; <code>weight.by = "prop.var"</code> (the
-default) scales each PC by its proportion of explained variance.</p>
+reproduces the standard result; the default
+<code>weight.by = "stdev"</code> scales each PC by its normalised
+standard deviation.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
 <span><span class="va">pbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunWeightedUMAP.html">RunWeightedUMAP</a></span><span class="op">(</span><span class="va">pbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">50</span>, weight.by <span class="op">=</span> <span class="st">"none"</span>,</span>
 <span>                        reduction.name <span class="op">=</span> <span class="st">"umap.std"</span>,     verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">pbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunWeightedUMAP.html">RunWeightedUMAP</a></span><span class="op">(</span><span class="va">pbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">50</span>, weight.by <span class="op">=</span> <span class="st">"prop.var"</span>,</span>
+<span><span class="va">pbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunWeightedUMAP.html">RunWeightedUMAP</a></span><span class="op">(</span><span class="va">pbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">50</span>,</span>
 <span>                        reduction.name <span class="op">=</span> <span class="st">"umap.wt"</span>,      verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">pbmc</span>, reduction <span class="op">=</span> <span class="st">"umap.std"</span>, label <span class="op">=</span> <span class="cn">TRUE</span>, repel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Standard UMAP"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">p2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">pbmc</span>, reduction <span class="op">=</span> <span class="st">"umap.wt"</span>,  label <span class="op">=</span> <span class="cn">TRUE</span>, repel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Weighted UMAP (prop.var)"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Weighted UMAP (stdev)"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">p1</span> <span class="op">|</span> <span class="va">p2</span></span></code></pre></div>
 <div class="figure">
-<img src="wUMAP_files/figure-html/plot-comparison-1.png" class="r-plt" alt="Left: standard UMAP. Right: variance-weighted UMAP." width="1500"><p class="caption">
-Left: standard UMAP. Right: variance-weighted UMAP.
+<img src="wUMAP_files/figure-html/plot-comparison-1.png" class="r-plt" alt="Left: standard UMAP. Right: stdev-weighted UMAP." width="1500"><p class="caption">
+Left: standard UMAP. Right: stdev-weighted UMAP.
 </p>
 </div>
 </div>
@@ -140,64 +143,61 @@ Left: standard UMAP. Right: variance-weighted UMAP.
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td><code>"prop.var"</code></td>
-<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>w</mi><mi>i</mi></msub><mo>=</mo><msubsup><mi>σ</mi><mi>i</mi><mn>2</mn></msubsup><mi>/</mi><mo>∑</mo><msup><mi>σ</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">w_i = \sigma_i^2 / \sum \sigma^2</annotation></semantics></math></td>
-<td>Early PCs strongly dominate</td>
-</tr>
-<tr class="even">
 <td><code>"stdev"</code></td>
 <td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>w</mi><mi>i</mi></msub><mo>=</mo><msub><mi>σ</mi><mi>i</mi></msub><mi>/</mi><mo>∑</mo><mi>σ</mi></mrow><annotation encoding="application/x-tex">w_i = \sigma_i / \sum \sigma</annotation></semantics></math></td>
-<td>Gentler emphasis on early PCs</td>
-</tr>
-<tr class="odd">
-<td><code>"mp"</code></td>
 <td>
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>w</mi><mi>i</mi></msub><mo>=</mo><mrow><mi mathvariant="normal">max</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><mspace width="0.167em"></mspace><msubsup><mi>σ</mi><mi>i</mi><mn>2</mn></msubsup><mo>−</mo><msub><mi>λ</mi><mi mathvariant="normal">max</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">w_i = \max(0,\,\sigma_i^2 - \lambda_{\max})</annotation></semantics></math>
-normalised</td>
-<td>Keeps only PCs above the Marchenko–Pastur noise floor</td>
+<strong>Default.</strong> Gentle emphasis on early PCs; keeps
+intermediate PCs in play.</td>
 </tr>
 <tr class="even">
+<td><code>"prop.var"</code></td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>w</mi><mi>i</mi></msub><mo>=</mo><msubsup><mi>σ</mi><mi>i</mi><mn>2</mn></msubsup><mi>/</mi><mo>∑</mo><msup><mi>σ</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">w_i = \sigma_i^2 / \sum \sigma^2</annotation></semantics></math></td>
+<td>Stronger up-weighting; use with <code>weight.factor &lt; 1</code> on
+PC-1-dominated data.</td>
+</tr>
+<tr class="odd">
 <td><code>"none"</code></td>
 <td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>w</mi><mi>i</mi></msub><mo>=</mo><mn>1</mn><mi>/</mi><mi>d</mi></mrow><annotation encoding="application/x-tex">w_i = 1/d</annotation></semantics></math></td>
-<td>Standard UMAP</td>
+<td>Standard UMAP (equal weights).</td>
 </tr>
 </tbody>
 </table>
-<p>The <code>"mp"</code> option applies the
+<p>The optional <code>mp.filter = TRUE</code> flag applies the
 <strong>Marchenko–Pastur</strong> (MP) law from random matrix theory to
-determine which PCs carry signal above the noise floor. Given
+determine which PCs carry genuine signal. Given
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>
 cells and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math>
 features, the theoretical noise ceiling is
 <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>λ</mi><mi mathvariant="normal">max</mi></msub><mo>=</mo><msup><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>+</mo><msqrt><mfrac><mi>p</mi><mi>n</mi></mfrac></msqrt><mo stretchy="true" form="postfix">)</mo></mrow><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\lambda_{\max} = \left(1 + \sqrt{\frac{p}{n}}\right)^2</annotation></semantics></math>
-Only PCs whose variance
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>σ</mi><mi>i</mi><mn>2</mn></msubsup><mo>&gt;</mo><msub><mi>λ</mi><mi mathvariant="normal">max</mi></msub></mrow><annotation encoding="application/x-tex">\sigma_i^2 &gt; \lambda_{\max}</annotation></semantics></math>
-receive non-zero weight; all others are treated as noise and zeroed out.
-If no PC clears the threshold (e.g. on tiny datasets) the function falls
-back to <code>"prop.var"</code> with a warning.</p>
+PCs whose variance
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>σ</mi><mi>i</mi><mn>2</mn></msubsup><mo>≤</mo><msub><mi>λ</mi><mi mathvariant="normal">max</mi></msub></mrow><annotation encoding="application/x-tex">\sigma_i^2 \leq \lambda_{\max}</annotation></semantics></math>
+are zeroed out <em>after</em> the base weights are computed, then the
+remaining weights are renormalised. It works with any
+<code>weight.by</code> scheme.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">pbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunWeightedUMAP.html">RunWeightedUMAP</a></span><span class="op">(</span><span class="va">pbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">50</span>, weight.by <span class="op">=</span> <span class="st">"stdev"</span>,</span>
-<span>                        reduction.name <span class="op">=</span> <span class="st">"umap.wt.sd"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">pbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunWeightedUMAP.html">RunWeightedUMAP</a></span><span class="op">(</span><span class="va">pbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">50</span>, weight.by <span class="op">=</span> <span class="st">"prop.var"</span>,</span>
+<span>                        reduction.name <span class="op">=</span> <span class="st">"umap.wt.pv"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">p3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">pbmc</span>, reduction <span class="op">=</span> <span class="st">"umap.wt.sd"</span>, label <span class="op">=</span> <span class="cn">TRUE</span>, repel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Weighted UMAP (stdev)"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">p3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">pbmc</span>, reduction <span class="op">=</span> <span class="st">"umap.wt.pv"</span>, label <span class="op">=</span> <span class="cn">TRUE</span>, repel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Weighted UMAP (prop.var)"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">p2</span> <span class="op">|</span> <span class="va">p3</span></span></code></pre></div>
 <div class="figure">
-<img src="wUMAP_files/figure-html/plot-stdev-1.png" class="r-plt" alt="Proportional-variance vs standard-deviation weighting." width="1500"><p class="caption">
-Proportional-variance vs standard-deviation weighting.
+<img src="wUMAP_files/figure-html/plot-pv-1.png" class="r-plt" alt="stdev (default) vs prop.var weighting." width="1500"><p class="caption">
+stdev (default) vs prop.var weighting.
 </p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="marchenkopastur-weighting">Marchenko–Pastur weighting<a class="anchor" aria-label="anchor" href="#marchenkopastur-weighting"></a>
+<h2 id="marchenkopastur-filtering">Marchenko–Pastur filtering<a class="anchor" aria-label="anchor" href="#marchenkopastur-filtering"></a>
 </h2>
-<p><code>weight.by = "mp"</code> uses random matrix theory to identify
+<p><code>mp.filter = TRUE</code> uses random matrix theory to identify
 PCs that carry genuine signal above the noise floor predicted for a
 random matrix of the same dimensions. Only those PCs receive non-zero
-weight.</p>
+weight; the remainder are zeroed out regardless of the base weighting
+scheme.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">pbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunWeightedUMAP.html">RunWeightedUMAP</a></span><span class="op">(</span><span class="va">pbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">50</span>, weight.by <span class="op">=</span> <span class="st">"mp"</span>,</span>
+<code class="sourceCode R"><span><span class="va">pbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunWeightedUMAP.html">RunWeightedUMAP</a></span><span class="op">(</span><span class="va">pbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">50</span>, mp.filter <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>                        reduction.name <span class="op">=</span> <span class="st">"umap.mp"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <p>We can inspect how many PCs were retained (non-zero weight):</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
@@ -206,18 +206,18 @@ weight.</p>
 <span>            <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">mp_weights</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">mp_weights</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; 8 / 50 PCs above noise floor (non-zero weight)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/barplot.html" class="external-link">barplot</a></span><span class="op">(</span><span class="va">mp_weights</span>, names.arg <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_along</a></span><span class="op">(</span><span class="va">mp_weights</span><span class="op">)</span>,</span>
-<span>        xlab <span class="op">=</span> <span class="st">"PC"</span>, ylab <span class="op">=</span> <span class="st">"MP weight"</span>,</span>
-<span>        main <span class="op">=</span> <span class="st">"Marchenko-Pastur weights (zero = noise)"</span>,</span>
+<span>        xlab <span class="op">=</span> <span class="st">"PC"</span>, ylab <span class="op">=</span> <span class="st">"stdev weight (after MP filtering)"</span>,</span>
+<span>        main <span class="op">=</span> <span class="st">"Weights after Marchenko-Pastur filtering (zero = noise)"</span>,</span>
 <span>        col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">mp_weights</span> <span class="op">&gt;</span> <span class="fl">0</span>, <span class="st">"#4393C3"</span>, <span class="st">"#D1D1D1"</span><span class="op">)</span>,</span>
 <span>        border <span class="op">=</span> <span class="cn">NA</span>, las <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
 <p><img src="wUMAP_files/figure-html/mp-weights-1.png" class="r-plt" alt="" width="1500"></p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p_mp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">pbmc</span>, reduction <span class="op">=</span> <span class="st">"umap.mp"</span>, label <span class="op">=</span> <span class="cn">TRUE</span>, repel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Weighted UMAP (mp)"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Weighted UMAP (stdev + mp.filter)"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">p2</span> <span class="op">|</span> <span class="va">p_mp</span></span></code></pre></div>
 <div class="figure">
-<img src="wUMAP_files/figure-html/plot-mp-1.png" class="r-plt" alt="MP weighting vs proportional-variance weighting." width="1500"><p class="caption">
-MP weighting vs proportional-variance weighting.
+<img src="wUMAP_files/figure-html/plot-mp-1.png" class="r-plt" alt="stdev weighting vs stdev + MP filtering." width="1500"><p class="caption">
+stdev weighting vs stdev + MP filtering.
 </p>
 </div>
 </div>
@@ -228,10 +228,10 @@ MP weighting vs proportional-variance weighting.
 unweighted (<code>0</code>) and fully weighted (<code>1</code>)
 embedding:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">pbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunWeightedUMAP.html">RunWeightedUMAP</a></span><span class="op">(</span><span class="va">pbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">50</span>, weight.by <span class="op">=</span> <span class="st">"prop.var"</span>,</span>
+<code class="sourceCode R"><span><span class="va">pbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunWeightedUMAP.html">RunWeightedUMAP</a></span><span class="op">(</span><span class="va">pbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">50</span>, weight.by <span class="op">=</span> <span class="st">"stdev"</span>,</span>
 <span>                        weight.factor <span class="op">=</span> <span class="fl">0.25</span>, reduction.name <span class="op">=</span> <span class="st">"umap.wf25"</span>,</span>
 <span>                        verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="va">pbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunWeightedUMAP.html">RunWeightedUMAP</a></span><span class="op">(</span><span class="va">pbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">50</span>, weight.by <span class="op">=</span> <span class="st">"prop.var"</span>,</span>
+<span><span class="va">pbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunWeightedUMAP.html">RunWeightedUMAP</a></span><span class="op">(</span><span class="va">pbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">50</span>, weight.by <span class="op">=</span> <span class="st">"stdev"</span>,</span>
 <span>                        weight.factor <span class="op">=</span> <span class="fl">0.75</span>, reduction.name <span class="op">=</span> <span class="st">"umap.wf75"</span>,</span>
 <span>                        verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
@@ -258,16 +258,17 @@ others, <code>log.scale = TRUE</code> first applies <code><a href="https://rdrr.
 to the weights before normalising. This compresses the dynamic range so
 intermediate PCs still contribute to the layout.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">pbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunWeightedUMAP.html">RunWeightedUMAP</a></span><span class="op">(</span><span class="va">pbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">50</span>, weight.by <span class="op">=</span> <span class="st">"prop.var"</span>,</span>
+<code class="sourceCode R"><span><span class="va">pbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunWeightedUMAP.html">RunWeightedUMAP</a></span><span class="op">(</span><span class="va">pbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">50</span>, weight.by <span class="op">=</span> <span class="st">"stdev"</span>,</span>
 <span>                        log.scale <span class="op">=</span> <span class="cn">TRUE</span>, reduction.name <span class="op">=</span> <span class="st">"umap.log"</span>,</span>
 <span>                        verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">pbmc</span>, reduction <span class="op">=</span> <span class="st">"umap.std"</span>, label <span class="op">=</span> <span class="cn">TRUE</span>, repel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Standard"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|</span></span>
-<span><span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">pbmc</span>, reduction <span class="op">=</span> <span class="st">"umap.wt"</span>,  label <span class="op">=</span> <span class="cn">TRUE</span>, repel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"prop.var"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|</span></span>
-<span><span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">pbmc</span>, reduction <span class="op">=</span> <span class="st">"umap.log"</span>, label <span class="op">=</span> <span class="cn">TRUE</span>, repel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"prop.var + log.scale"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">pbmc</span>, reduction <span class="op">=</span> <span class="st">"umap.wt"</span>,  label <span class="op">=</span> <span class="cn">TRUE</span>, repel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"stdev"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|</span></span>
+<span><span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">pbmc</span>, reduction <span class="op">=</span> <span class="st">"umap.log"</span>, label <span class="op">=</span> <span class="cn">TRUE</span>, repel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"stdev + log.scale"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <div class="figure">
-<img src="wUMAP_files/figure-html/plot-log-1.png" class="r-plt" alt="Standard (left), fully weighted (centre), log-scaled weights (right)." width="1500"><p class="caption">
-Standard (left), fully weighted (centre), log-scaled weights (right).
+<img src="wUMAP_files/figure-html/plot-log-1.png" class="r-plt" alt="Standard (left), stdev weighted (centre), log-scaled stdev weights (right)." width="1500"><p class="caption">
+Standard (left), stdev weighted (centre), log-scaled stdev weights
+(right).
 </p>
 </div>
 </div>
@@ -281,8 +282,7 @@ embedding and builds both the KNN and SNN graphs in one step, so
 clustering and UMAP share <em>exactly</em> the same nearest-neighbour
 structure.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">pbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunWeightedNeighbors.html">RunWeightedNeighbors</a></span><span class="op">(</span><span class="va">pbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">50</span>, weight.by <span class="op">=</span> <span class="st">"prop.var"</span>,</span>
-<span>                             prefix <span class="op">=</span> <span class="st">"wt"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">pbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunWeightedNeighbors.html">RunWeightedNeighbors</a></span><span class="op">(</span><span class="va">pbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">50</span>, prefix <span class="op">=</span> <span class="st">"wt"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">pbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">pbmc</span>, graph.name <span class="op">=</span> <span class="st">"wt_snn"</span>, resolution <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>                     verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
@@ -307,6 +307,10 @@ measures the distance between every pair of neighbours in a
 <strong>locally-fitted PCA basis</strong> — capturing the predominant
 direction of variation in each cell’s neighbourhood (e.g. the tangent of
 a trajectory) and de-emphasising transverse noise.</p>
+<p>The <code>local.weight.by</code> parameter (default
+<code>"stdev"</code>) additionally weights each local PC direction by
+its contribution to local variance, analogous to how
+<code>weight.by</code> weights global PCs.</p>
 <p><strong>Algorithm:</strong></p>
 <ol style="list-style-type: decimal">
 <li>Find the global
@@ -317,28 +321,40 @@ nearest neighbours of every cell in PCA space (RANN).</li>
 centre its
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>-neighbourhood
 and compute a compact SVD.</li>
-<li>Re-express displacement vectors to neighbours in the local
-<code>local.dims</code> principal directions.</li>
-<li>Report the Euclidean norm in that local basis as the refined
-distance.</li>
-<li>Pass the
+<li>Optionally weight the <code>local.dims</code> principal directions
+by their local variance contribution
+(<code>local.weight.by</code>).</li>
+<li>Re-express displacement vectors to neighbours in that weighted local
+basis.</li>
+<li>Report the Euclidean norm as the refined distance and pass the
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>×</mo><mi>k</mi></mrow><annotation encoding="application/x-tex">n \times k</annotation></semantics></math>
-index/distance matrix directly to <code><a href="https://jlmelville.github.io/uwot/reference/umap.html" class="external-link">uwot::umap</a></code> as a
-precomputed k-NN graph.</li>
+distance matrix to <code><a href="https://jlmelville.github.io/uwot/reference/umap.html" class="external-link">uwot::umap</a></code>.</li>
 </ol>
+<p>For consistent clustering and UMAP topology, use
+<code><a href="../reference/RunLocalPCANeighbors.html">RunLocalPCANeighbors()</a></code> to build the KNN/SNN graphs first,
+then <code><a href="../reference/RunLocalPCAUMAP.html">RunLocalPCAUMAP()</a></code> with matching parameters.</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
+<span><span class="co"># Build local PCA KNN/SNN graphs (stdev weighting — default)</span></span>
+<span><span class="va">pbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunLocalPCANeighbors.html">RunLocalPCANeighbors</a></span><span class="op">(</span><span class="va">pbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="fl">30</span>,</span>
+<span>                             prefix <span class="op">=</span> <span class="st">"lp"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Cluster on the local PCA SNN graph</span></span>
+<span><span class="va">pbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">pbmc</span>, graph.name <span class="op">=</span> <span class="st">"lp_snn"</span>, resolution <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>                     verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># UMAP with matching local PCA distances</span></span>
 <span><span class="va">pbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunLocalPCAUMAP.html">RunLocalPCAUMAP</a></span><span class="op">(</span><span class="va">pbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="fl">30</span>,</span>
 <span>                        reduction.name <span class="op">=</span> <span class="st">"lp.umap"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p_std</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">pbmc</span>, reduction <span class="op">=</span> <span class="st">"umap.std"</span>,  label <span class="op">=</span> <span class="cn">TRUE</span>, repel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Standard UMAP"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">p_lp</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">pbmc</span>, reduction <span class="op">=</span> <span class="st">"lp.umap"</span>,   label <span class="op">=</span> <span class="cn">TRUE</span>, repel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Local PCA UMAP"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Local PCA UMAP (stdev)"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">p_std</span> <span class="op">|</span> <span class="va">p_lp</span></span></code></pre></div>
 <div class="figure">
-<img src="wUMAP_files/figure-html/plot-local-pca-1.png" class="r-plt" alt="Standard UMAP (left) vs local PCA UMAP (right)." width="1500"><p class="caption">
-Standard UMAP (left) vs local PCA UMAP (right).
+<img src="wUMAP_files/figure-html/plot-local-pca-1.png" class="r-plt" alt="Standard UMAP (left) vs local PCA UMAP with stdev weighting (right)." width="1500"><p class="caption">
+Standard UMAP (left) vs local PCA UMAP with stdev weighting (right).
 </p>
 </div>
 <p>The local PCA approach can reveal trajectory-like structure that is

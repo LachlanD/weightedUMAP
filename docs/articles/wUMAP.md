@@ -8,7 +8,9 @@ ones — yet a standard UMAP over PCs 1–50 weights PC 50 the same as PC 1.
 
 **wUMAP** scales each PC axis by a weight derived from its variance
 contribution before handing the embedding to UMAP, so biologically
-informative PCs dominate cell distances in the final layout.
+informative PCs dominate cell distances in the final layout. The
+recommended default scheme is `weight.by = "stdev"`, which gently
+up-weights early PCs while keeping intermediate ones in play.
 
 ## Setup
 
@@ -38,9 +40,9 @@ Idents(pbmc) <- "seurat_annotations"
 [`RunWeightedUMAP()`](https://lachland.github.io/weightedUMAP/reference/RunWeightedUMAP.md)
 is a drop-in replacement for
 [`RunUMAP()`](https://satijalab.org/seurat/reference/RunUMAP.html).
-Setting `weight.by = "none"` reproduces the standard result;
-`weight.by = "prop.var"` (the default) scales each PC by its proportion
-of explained variance.
+Setting `weight.by = "none"` reproduces the standard result; the default
+`weight.by = "stdev"` scales each PC by its normalised standard
+deviation.
 
 ``` r
 
@@ -48,7 +50,7 @@ set.seed(42)
 pbmc <- RunWeightedUMAP(pbmc, dims = 1:50, weight.by = "none",
                         reduction.name = "umap.std",     verbose = FALSE)
 
-pbmc <- RunWeightedUMAP(pbmc, dims = 1:50, weight.by = "prop.var",
+pbmc <- RunWeightedUMAP(pbmc, dims = 1:50,
                         reduction.name = "umap.wt",      verbose = FALSE)
 ```
 
@@ -57,14 +59,14 @@ pbmc <- RunWeightedUMAP(pbmc, dims = 1:50, weight.by = "prop.var",
 p1 <- DimPlot(pbmc, reduction = "umap.std", label = TRUE, repel = TRUE) +
   ggtitle("Standard UMAP") + NoLegend()
 p2 <- DimPlot(pbmc, reduction = "umap.wt",  label = TRUE, repel = TRUE) +
-  ggtitle("Weighted UMAP (prop.var)") + NoLegend()
+  ggtitle("Weighted UMAP (stdev)") + NoLegend()
 p1 | p2
 ```
 
-![Left: standard UMAP. Right: variance-weighted
+![Left: standard UMAP. Right: stdev-weighted
 UMAP.](wUMAP_files/figure-html/plot-comparison-1.png)
 
-Left: standard UMAP. Right: variance-weighted UMAP.
+Left: standard UMAP. Right: stdev-weighted UMAP.
 
 ## Weighting schemes
 
@@ -72,49 +74,49 @@ Three schemes are available via `weight.by`:
 
 | Value | Weight formula | Effect |
 |----|----|----|
-| `"prop.var"` | $`w_i = \sigma_i^2 / \sum \sigma^2`$ | Early PCs strongly dominate |
-| `"stdev"` | $`w_i = \sigma_i / \sum \sigma`$ | Gentler emphasis on early PCs |
-| `"mp"` | $`w_i = \max(0,\,\sigma_i^2 - \lambda_{\max})`$ normalised | Keeps only PCs above the Marchenko–Pastur noise floor |
-| `"none"` | $`w_i = 1/d`$ | Standard UMAP |
+| `"stdev"` | $`w_i = \sigma_i / \sum \sigma`$ | **Default.** Gentle emphasis on early PCs; keeps intermediate PCs in play. |
+| `"prop.var"` | $`w_i = \sigma_i^2 / \sum \sigma^2`$ | Stronger up-weighting; use with `weight.factor < 1` on PC-1-dominated data. |
+| `"none"` | $`w_i = 1/d`$ | Standard UMAP (equal weights). |
 
-The `"mp"` option applies the **Marchenko–Pastur** (MP) law from random
-matrix theory to determine which PCs carry signal above the noise floor.
-Given $`n`$ cells and $`p`$ features, the theoretical noise ceiling is
+The optional `mp.filter = TRUE` flag applies the **Marchenko–Pastur**
+(MP) law from random matrix theory to determine which PCs carry genuine
+signal. Given $`n`$ cells and $`p`$ features, the theoretical noise
+ceiling is
 ``` math
 \lambda_{\max} = \left(1 + \sqrt{\frac{p}{n}}\right)^2
 ```
-Only PCs whose variance $`\sigma_i^2 > \lambda_{\max}`$ receive non-zero
-weight; all others are treated as noise and zeroed out. If no PC clears
-the threshold (e.g. on tiny datasets) the function falls back to
-`"prop.var"` with a warning.
+PCs whose variance $`\sigma_i^2 \leq \lambda_{\max}`$ are zeroed out
+*after* the base weights are computed, then the remaining weights are
+renormalised. It works with any `weight.by` scheme.
 
 ``` r
 
-pbmc <- RunWeightedUMAP(pbmc, dims = 1:50, weight.by = "stdev",
-                        reduction.name = "umap.wt.sd", verbose = FALSE)
+pbmc <- RunWeightedUMAP(pbmc, dims = 1:50, weight.by = "prop.var",
+                        reduction.name = "umap.wt.pv", verbose = FALSE)
 ```
 
 ``` r
 
-p3 <- DimPlot(pbmc, reduction = "umap.wt.sd", label = TRUE, repel = TRUE) +
-  ggtitle("Weighted UMAP (stdev)") + NoLegend()
+p3 <- DimPlot(pbmc, reduction = "umap.wt.pv", label = TRUE, repel = TRUE) +
+  ggtitle("Weighted UMAP (prop.var)") + NoLegend()
 p2 | p3
 ```
 
-![Proportional-variance vs standard-deviation
-weighting.](wUMAP_files/figure-html/plot-stdev-1.png)
+![stdev (default) vs prop.var
+weighting.](wUMAP_files/figure-html/plot-pv-1.png)
 
-Proportional-variance vs standard-deviation weighting.
+stdev (default) vs prop.var weighting.
 
-## Marchenko–Pastur weighting
+## Marchenko–Pastur filtering
 
-`weight.by = "mp"` uses random matrix theory to identify PCs that carry
+`mp.filter = TRUE` uses random matrix theory to identify PCs that carry
 genuine signal above the noise floor predicted for a random matrix of
-the same dimensions. Only those PCs receive non-zero weight.
+the same dimensions. Only those PCs receive non-zero weight; the
+remainder are zeroed out regardless of the base weighting scheme.
 
 ``` r
 
-pbmc <- RunWeightedUMAP(pbmc, dims = 1:50, weight.by = "mp",
+pbmc <- RunWeightedUMAP(pbmc, dims = 1:50, mp.filter = TRUE,
                         reduction.name = "umap.mp", verbose = FALSE)
 ```
 
@@ -127,8 +129,8 @@ cat(sprintf("%d / %d PCs above noise floor (non-zero weight)\n",
             sum(mp_weights > 0), length(mp_weights)))
 #> 8 / 50 PCs above noise floor (non-zero weight)
 barplot(mp_weights, names.arg = seq_along(mp_weights),
-        xlab = "PC", ylab = "MP weight",
-        main = "Marchenko-Pastur weights (zero = noise)",
+        xlab = "PC", ylab = "stdev weight (after MP filtering)",
+        main = "Weights after Marchenko-Pastur filtering (zero = noise)",
         col = ifelse(mp_weights > 0, "#4393C3", "#D1D1D1"),
         border = NA, las = 1)
 ```
@@ -138,14 +140,14 @@ barplot(mp_weights, names.arg = seq_along(mp_weights),
 ``` r
 
 p_mp <- DimPlot(pbmc, reduction = "umap.mp", label = TRUE, repel = TRUE) +
-  ggtitle("Weighted UMAP (mp)") + NoLegend()
+  ggtitle("Weighted UMAP (stdev + mp.filter)") + NoLegend()
 p2 | p_mp
 ```
 
-![MP weighting vs proportional-variance
-weighting.](wUMAP_files/figure-html/plot-mp-1.png)
+![stdev weighting vs stdev + MP
+filtering.](wUMAP_files/figure-html/plot-mp-1.png)
 
-MP weighting vs proportional-variance weighting.
+stdev weighting vs stdev + MP filtering.
 
 ## Blending with `weight.factor`
 
@@ -154,10 +156,10 @@ and fully weighted (`1`) embedding:
 
 ``` r
 
-pbmc <- RunWeightedUMAP(pbmc, dims = 1:50, weight.by = "prop.var",
+pbmc <- RunWeightedUMAP(pbmc, dims = 1:50, weight.by = "stdev",
                         weight.factor = 0.25, reduction.name = "umap.wf25",
                         verbose = FALSE)
-pbmc <- RunWeightedUMAP(pbmc, dims = 1:50, weight.by = "prop.var",
+pbmc <- RunWeightedUMAP(pbmc, dims = 1:50, weight.by = "stdev",
                         weight.factor = 0.75, reduction.name = "umap.wf75",
                         verbose = FALSE)
 ```
@@ -190,7 +192,7 @@ contribute to the layout.
 
 ``` r
 
-pbmc <- RunWeightedUMAP(pbmc, dims = 1:50, weight.by = "prop.var",
+pbmc <- RunWeightedUMAP(pbmc, dims = 1:50, weight.by = "stdev",
                         log.scale = TRUE, reduction.name = "umap.log",
                         verbose = FALSE)
 ```
@@ -198,14 +200,15 @@ pbmc <- RunWeightedUMAP(pbmc, dims = 1:50, weight.by = "prop.var",
 ``` r
 
 DimPlot(pbmc, reduction = "umap.std", label = TRUE, repel = TRUE) + ggtitle("Standard") + NoLegend() |
-DimPlot(pbmc, reduction = "umap.wt",  label = TRUE, repel = TRUE) + ggtitle("prop.var") + NoLegend() |
-DimPlot(pbmc, reduction = "umap.log", label = TRUE, repel = TRUE) + ggtitle("prop.var + log.scale") + NoLegend()
+DimPlot(pbmc, reduction = "umap.wt",  label = TRUE, repel = TRUE) + ggtitle("stdev") + NoLegend() |
+DimPlot(pbmc, reduction = "umap.log", label = TRUE, repel = TRUE) + ggtitle("stdev + log.scale") + NoLegend()
 ```
 
-![Standard (left), fully weighted (centre), log-scaled weights
+![Standard (left), stdev weighted (centre), log-scaled stdev weights
 (right).](wUMAP_files/figure-html/plot-log-1.png)
 
-Standard (left), fully weighted (centre), log-scaled weights (right).
+Standard (left), stdev weighted (centre), log-scaled stdev weights
+(right).
 
 ## Consistent clustering and UMAP with `RunWeightedNeighbors()`
 
@@ -218,8 +221,7 @@ nearest-neighbour structure.
 
 ``` r
 
-pbmc <- RunWeightedNeighbors(pbmc, dims = 1:50, weight.by = "prop.var",
-                             prefix = "wt", verbose = FALSE)
+pbmc <- RunWeightedNeighbors(pbmc, dims = 1:50, prefix = "wt", verbose = FALSE)
 
 pbmc <- FindClusters(pbmc, graph.name = "wt_snn", resolution = 0.5,
                      verbose = FALSE)
@@ -248,23 +250,45 @@ pair of neighbours in a **locally-fitted PCA basis** — capturing the
 predominant direction of variation in each cell’s neighbourhood
 (e.g. the tangent of a trajectory) and de-emphasising transverse noise.
 
+The `local.weight.by` parameter (default `"stdev"`) additionally weights
+each local PC direction by its contribution to local variance, analogous
+to how `weight.by` weights global PCs.
+
 **Algorithm:**
 
 1.  Find the global $`k`$ nearest neighbours of every cell in PCA space
     (RANN).
 2.  For each cell $`i`$, centre its $`k`$-neighbourhood and compute a
     compact SVD.
-3.  Re-express displacement vectors to neighbours in the local
-    `local.dims` principal directions.
-4.  Report the Euclidean norm in that local basis as the refined
-    distance.
-5.  Pass the $`n \times k`$ index/distance matrix directly to
-    [`uwot::umap`](https://jlmelville.github.io/uwot/reference/umap.html)
-    as a precomputed k-NN graph.
+3.  Optionally weight the `local.dims` principal directions by their
+    local variance contribution (`local.weight.by`).
+4.  Re-express displacement vectors to neighbours in that weighted local
+    basis.
+5.  Report the Euclidean norm as the refined distance and pass the
+    $`n \times k`$ distance matrix to
+    [`uwot::umap`](https://jlmelville.github.io/uwot/reference/umap.html).
+
+For consistent clustering and UMAP topology, use
+[`RunLocalPCANeighbors()`](https://lachland.github.io/weightedUMAP/reference/RunLocalPCANeighbors.md)
+to build the KNN/SNN graphs first, then
+[`RunLocalPCAUMAP()`](https://lachland.github.io/weightedUMAP/reference/RunLocalPCAUMAP.md)
+with matching parameters.
 
 ``` r
 
 set.seed(42)
+# Build local PCA KNN/SNN graphs (stdev weighting — default)
+pbmc <- RunLocalPCANeighbors(pbmc, dims = 1:30, k.param = 30,
+                             prefix = "lp", verbose = FALSE)
+
+# Cluster on the local PCA SNN graph
+pbmc <- FindClusters(pbmc, graph.name = "lp_snn", resolution = 0.5,
+                     verbose = FALSE)
+```
+
+``` r
+
+# UMAP with matching local PCA distances
 pbmc <- RunLocalPCAUMAP(pbmc, dims = 1:30, k.param = 30,
                         reduction.name = "lp.umap", verbose = FALSE)
 ```
@@ -274,14 +298,14 @@ pbmc <- RunLocalPCAUMAP(pbmc, dims = 1:30, k.param = 30,
 p_std <- DimPlot(pbmc, reduction = "umap.std",  label = TRUE, repel = TRUE) +
   ggtitle("Standard UMAP") + NoLegend()
 p_lp  <- DimPlot(pbmc, reduction = "lp.umap",   label = TRUE, repel = TRUE) +
-  ggtitle("Local PCA UMAP") + NoLegend()
+  ggtitle("Local PCA UMAP (stdev)") + NoLegend()
 p_std | p_lp
 ```
 
-![Standard UMAP (left) vs local PCA UMAP
+![Standard UMAP (left) vs local PCA UMAP with stdev weighting
 (right).](wUMAP_files/figure-html/plot-local-pca-1.png)
 
-Standard UMAP (left) vs local PCA UMAP (right).
+Standard UMAP (left) vs local PCA UMAP with stdev weighting (right).
 
 The local PCA approach can reveal trajectory-like structure that is
 compressed in standard UMAP because the distance metric is insensitive

@@ -11,7 +11,7 @@ RunWeightedUMAP(
   object,
   reduction = "pca",
   dims = NULL,
-  weight.by = c("prop.var", "stdev", "mp", "none"),
+  weight.by = c("stdev", "prop.var", "none"),
   graph = NULL,
   reduction.name = "wt.umap",
   reduction.key = "wtUMAP_",
@@ -23,6 +23,7 @@ RunWeightedUMAP(
   seed.use = 42L,
   weight.factor = 1,
   log.scale = FALSE,
+  mp.filter = FALSE,
   verbose = TRUE,
   ...
 )
@@ -49,14 +50,20 @@ RunWeightedUMAP(
 
   Weighting scheme applied to PC scores before UMAP. One of:
 
-  `"prop.var"`
-
-  :   Proportion of variance explained (`sdev^2 / sum(sdev^2)`).
-      Default.
-
   `"stdev"`
 
-  :   Standard deviation, normalised (`sdev / sum(sdev)`).
+  :   Standard deviation, normalised (`sdev / sum(sdev)`). Default.
+      Gently up-weights early PCs while keeping intermediate ones in
+      play, giving a good balance between signal emphasis and layout
+      completeness.
+
+  `"prop.var"`
+
+  :   Proportion of variance explained (`sdev^2 / sum(sdev^2)`); more
+      aggressively up-weights the dominant PCs. Use with
+      `weight.factor < 1` or `log.scale = TRUE` to avoid
+      over-compression on datasets where PC 1 explains a large fraction
+      of variance.
 
   `"none"`
 
@@ -131,6 +138,16 @@ RunWeightedUMAP(
   relatively more influence. Ignored when `weight.by = "none"`. Default:
   `FALSE`.
 
+- mp.filter:
+
+  Logical. If `TRUE`, PCs whose variance is at or below the
+  Marchenko-Pastur bulk-noise threshold (\\\lambda\_{\max} = (1 +
+  \sqrt{p/n})^2\\) are zeroed out after the chosen `weight.by` weights
+  are computed, and the remaining weights are renormalised. This makes
+  MP an orthogonal filtering step compatible with any weighting scheme.
+  Ignored when `weight.by = "none"` and no PCs are above the threshold.
+  Default: `FALSE`.
+
 - verbose:
 
   Print progress messages and per-PC weights? Default: `TRUE`.
@@ -152,41 +169,3 @@ appended. The `misc` slot of this reduction stores:
 - `source.reduction` — name of the source reduction
 
 - `dims.used` — integer vector of dimensions used
-
-## Examples
-
-``` r
-if (FALSE) { # \dontrun{
-library(Seurat)
-library(wUMAP)
-library(patchwork)
-
-# Assumes pbmc has PCA already run
-
-# Standard UMAP — all PCs weighted equally
-pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "none",
-                        reduction.name = "umap.std")
-
-# Weighted UMAP — PCs scaled by proportion of variance explained
-pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "prop.var",
-                        reduction.name = "wt.umap")
-
-# Log-scaled weights — compresses dynamic range so intermediate PCs
-# contribute more relative to the dominant PCs
-pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "prop.var",
-                        log.scale = TRUE, reduction.name = "wt.umap.log")
-
-# Standard deviation weighting
-pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "stdev",
-                        reduction.name = "wt.umap.sd")
-
-# Compare standard vs weighted side by side
-p1 <- DimPlot(pbmc, reduction = "umap.std",   label = TRUE) +
-  ggtitle("Standard UMAP")
-p2 <- DimPlot(pbmc, reduction = "wt.umap",    label = TRUE) +
-  ggtitle("Weighted UMAP (prop.var)")
-p3 <- DimPlot(pbmc, reduction = "wt.umap.log", label = TRUE) +
-  ggtitle("Weighted UMAP (prop.var, log.scale)")
-p1 | p2
-} # }
-```
