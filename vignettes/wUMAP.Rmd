@@ -81,7 +81,16 @@ Three schemes are available via `weight.by`:
 |---|---|---|
 | `"prop.var"` | $w_i = \sigma_i^2 / \sum \sigma^2$ | Early PCs strongly dominate |
 | `"stdev"` | $w_i = \sigma_i / \sum \sigma$ | Gentler emphasis on early PCs |
+| `"mp"` | $w_i = \max(0,\,\sigma_i^2 - \lambda_{\max})$ normalised | Keeps only PCs above the Marchenko–Pastur noise floor |
 | `"none"` | $w_i = 1/d$ | Standard UMAP |
+
+The `"mp"` option applies the **Marchenko–Pastur** (MP) law from random matrix
+theory to determine which PCs carry signal above the noise floor. Given $n$
+cells and $p$ features, the theoretical noise ceiling is
+$$\lambda_{\max} = \left(1 + \sqrt{\frac{p}{n}}\right)^2$$
+Only PCs whose variance $\sigma_i^2 > \lambda_{\max}$ receive non-zero weight;
+all others are treated as noise and zeroed out. If no PC clears the threshold
+(e.g. on tiny datasets) the function falls back to `"prop.var"` with a warning.
 
 ```{r weight-by-stdev}
 pbmc <- RunWeightedUMAP(pbmc, dims = 1:50, weight.by = "stdev",
@@ -92,6 +101,36 @@ pbmc <- RunWeightedUMAP(pbmc, dims = 1:50, weight.by = "stdev",
 p3 <- DimPlot(pbmc, reduction = "umap.wt.sd", label = TRUE, repel = TRUE) +
   ggtitle("Weighted UMAP (stdev)") + NoLegend()
 p2 | p3
+```
+
+## Marchenko–Pastur weighting
+
+`weight.by = "mp"` uses random matrix theory to identify PCs that carry
+genuine signal above the noise floor predicted for a random matrix of the
+same dimensions. Only those PCs receive non-zero weight.
+
+```{r weight-by-mp}
+pbmc <- RunWeightedUMAP(pbmc, dims = 1:50, weight.by = "mp",
+                        reduction.name = "umap.mp", verbose = FALSE)
+```
+
+We can inspect how many PCs were retained (non-zero weight):
+
+```{r mp-weights}
+mp_weights <- Misc(pbmc[["umap.mp"]])$weights
+cat(sprintf("%d / %d PCs above noise floor (non-zero weight)\n",
+            sum(mp_weights > 0), length(mp_weights)))
+barplot(mp_weights, names.arg = seq_along(mp_weights),
+        xlab = "PC", ylab = "MP weight",
+        main = "Marchenko-Pastur weights (zero = noise)",
+        col = ifelse(mp_weights > 0, "#4393C3", "#D1D1D1"),
+        border = NA, las = 1)
+```
+
+```{r plot-mp, fig.cap="MP weighting vs proportional-variance weighting."}
+p_mp <- DimPlot(pbmc, reduction = "umap.mp", label = TRUE, repel = TRUE) +
+  ggtitle("Weighted UMAP (mp)") + NoLegend()
+p2 | p_mp
 ```
 
 ## Blending with `weight.factor`
@@ -162,9 +201,45 @@ DimPlot(pbmc, reduction = "umap.consistent", label = TRUE, repel = TRUE) +
   ggtitle("Consistent weighted clustering + UMAP") + NoLegend()
 ```
 
+## Local PCA UMAP
+
+`RunLocalPCAUMAP()` is a more principled alternative to global variance
+weighting. Rather than rescaling PC axes globally, it measures the distance
+between every pair of neighbours in a **locally-fitted PCA basis** — capturing
+the predominant direction of variation in each cell's neighbourhood (e.g. the
+tangent of a trajectory) and de-emphasising transverse noise.
+
+**Algorithm:**
+
+1. Find the global $k$ nearest neighbours of every cell in PCA space (RANN).
+2. For each cell $i$, centre its $k$-neighbourhood and compute a compact SVD.
+3. Re-express displacement vectors to neighbours in the local `local.dims`
+   principal directions.
+4. Report the Euclidean norm in that local basis as the refined distance.
+5. Pass the $n \times k$ index/distance matrix directly to `uwot::umap` as
+   a precomputed k-NN graph.
+
+```{r local-pca-umap}
+set.seed(42)
+pbmc <- RunLocalPCAUMAP(pbmc, dims = 1:30, k.param = 30,
+                        reduction.name = "lp.umap", verbose = FALSE)
+```
+
+```{r plot-local-pca, fig.cap="Standard UMAP (left) vs local PCA UMAP (right)."}
+p_std <- DimPlot(pbmc, reduction = "umap.std",  label = TRUE, repel = TRUE) +
+  ggtitle("Standard UMAP") + NoLegend()
+p_lp  <- DimPlot(pbmc, reduction = "lp.umap",   label = TRUE, repel = TRUE) +
+  ggtitle("Local PCA UMAP") + NoLegend()
+p_std | p_lp
+```
+
+The local PCA approach can reveal trajectory-like structure that is compressed
+in standard UMAP because the distance metric is insensitive to the predominant
+local direction of variation.
+
 ## Further reading
 
-For a quantitative evaluation of all weighting schemes against an independent
-protein-based ground truth (cbmc CITE-seq), see the
-[Benchmark](benchmark.html) article.
+For a quantitative evaluation of all weighting schemes (including `"mp"` and
+`RunLocalPCAUMAP`) against an independent protein-based ground truth (cbmc
+CITE-seq), see the [Benchmark](benchmark.html) article.
 

@@ -131,6 +131,32 @@ cbmc <- RunWeightedUMAP(cbmc, dims = 1:30, weight.by = "prop.var",
                         verbose = FALSE)
 ari_pv_log <- adjustedRandIndex(cbmc$seurat_clusters, cbmc$protein_annotations)
 pur_pv_log <- knn_purity(Embeddings(cbmc, "umap.pv.log"), cbmc$protein_annotations)
+
+# Marchenko-Pastur weighting
+cbmc <- RunWeightedNeighbors(cbmc, dims = 1:30, weight.by = "mp",
+                             prefix = "wt.mp", verbose = FALSE)
+cbmc <- FindClusters(cbmc, graph.name = "wt.mp_snn", resolution = 0.8,
+                     verbose = FALSE)
+cbmc <- RunWeightedUMAP(cbmc, dims = 1:30, weight.by = "mp",
+                        reduction.name = "umap.mp", verbose = FALSE)
+ari_mp <- adjustedRandIndex(cbmc$seurat_clusters, cbmc$protein_annotations)
+pur_mp <- knn_purity(Embeddings(cbmc, "umap.mp"), cbmc$protein_annotations)
+```
+
+## Local PCA UMAP
+
+[`RunLocalPCAUMAP()`](https://lachland.github.io/weightedUMAP/reference/RunLocalPCAUMAP.md)
+is an embedding-only method — it builds a per-neighbourhood PCA basis
+and uses it to compute anisotropic local distances before running UMAP.
+There is no companion graph-building step, so only k-NN purity (a direct
+measure of UMAP embedding quality) is reported; ARI is left as `NA`.
+
+``` r
+
+set.seed(42)
+cbmc <- RunLocalPCAUMAP(cbmc, dims = 1:30, k.param = 30,
+                        reduction.name = "umap.lp", verbose = FALSE)
+pur_lp <- knn_purity(Embeddings(cbmc, "umap.lp"), cbmc$protein_annotations)
 ```
 
 ## Results
@@ -144,26 +170,32 @@ results <- data.frame(
     "stdev + log.scale",
     "prop.var  wf=0.5",
     "prop.var  wf=1",
-    "prop.var + log.scale"
+    "prop.var + log.scale",
+    "mp (Marchenko-Pastur)",
+    "local PCA UMAP"
   ),
-  ARI       = c(ari_std, ari_sd, ari_sd_log, ari_pv05, ari_pv, ari_pv_log),
-  kNN_purity = c(pur_std, pur_sd, pur_sd_log, pur_pv05, pur_pv, pur_pv_log)
+  ARI       = c(ari_std, ari_sd, ari_sd_log, ari_pv05, ari_pv, ari_pv_log,
+                ari_mp, NA_real_),
+  kNN_purity = c(pur_std, pur_sd, pur_sd_log, pur_pv05, pur_pv, pur_pv_log,
+                 pur_mp, pur_lp)
 )
 knitr::kable(results, digits = 3,
-  caption = "Clustering quality vs protein labels on cbmc CITE-seq (n = 7,699 cells)")
+  caption = "Clustering quality vs protein labels on cbmc CITE-seq (n ≈ 7,699 cells). ARI = NA for local PCA UMAP (embedding-only method).")
 ```
 
-| Method               |   ARI | kNN_purity |
-|:---------------------|------:|-----------:|
-| standard (none)      | 0.548 |      0.927 |
-| stdev                | 0.504 |      0.927 |
-| stdev + log.scale    | 0.503 |      0.929 |
-| prop.var wf=0.5      | 0.496 |      0.924 |
-| prop.var wf=1        | 0.318 |      0.878 |
-| prop.var + log.scale | 0.398 |      0.880 |
+| Method                |   ARI | kNN_purity |
+|:----------------------|------:|-----------:|
+| standard (none)       | 0.548 |      0.927 |
+| stdev                 | 0.504 |      0.927 |
+| stdev + log.scale     | 0.503 |      0.929 |
+| prop.var wf=0.5       | 0.496 |      0.924 |
+| prop.var wf=1         | 0.318 |      0.878 |
+| prop.var + log.scale  | 0.398 |      0.880 |
+| mp (Marchenko-Pastur) | 0.322 |      0.875 |
+| local PCA UMAP        |    NA |      0.935 |
 
-Clustering quality vs protein labels on cbmc CITE-seq (n = 7,699 cells)
-{.table}
+Clustering quality vs protein labels on cbmc CITE-seq (n ≈ 7,699 cells).
+ARI = NA for local PCA UMAP (embedding-only method). {.table}
 
 ``` r
 
@@ -178,7 +210,8 @@ baseline <- data.frame(
   Score  = c(ari_std, pur_std)
 )
 
-ggplot(res_long, aes(x = Method, y = Score, fill = Method)) +
+ggplot(res_long[!is.na(res_long$Score), ],
+       aes(x = Method, y = Score, fill = Method)) +
   geom_col(show.legend = FALSE) +
   geom_hline(data = baseline, aes(yintercept = Score),
              linetype = "dashed", colour = "grey40") +
@@ -192,10 +225,11 @@ ggplot(res_long, aes(x = Method, y = Score, fill = Method)) +
 ```
 
 ![ARI and k-NN purity for each method. Dashed line = standard UMAP
-baseline.](benchmark_files/figure-html/results-plot-1.png)
+baseline. ARI is not shown for local PCA UMAP (embedding-only
+method).](benchmark_files/figure-html/results-plot-1.png)
 
 ARI and k-NN purity for each method. Dashed line = standard UMAP
-baseline.
+baseline. ARI is not shown for local PCA UMAP (embedding-only method).
 
 ## UMAP layouts coloured by protein label
 
@@ -215,7 +249,11 @@ plots <- list(
   DimPlot(cbmc, reduction = "umap.pv",    label = TRUE, repel = TRUE) +
     ggtitle(sprintf("prop.var wf=1  ARI=%.3f", ari_pv)) + NoLegend(),
   DimPlot(cbmc, reduction = "umap.pv.log", label = TRUE, repel = TRUE) +
-    ggtitle(sprintf("prop.var+log  ARI=%.3f", ari_pv_log)) + NoLegend()
+    ggtitle(sprintf("prop.var+log  ARI=%.3f", ari_pv_log)) + NoLegend(),
+  DimPlot(cbmc, reduction = "umap.mp",    label = TRUE, repel = TRUE) +
+    ggtitle(sprintf("mp  ARI=%.3f", ari_mp)) + NoLegend(),
+  DimPlot(cbmc, reduction = "umap.lp",    label = TRUE, repel = TRUE) +
+    ggtitle(sprintf("local PCA UMAP  purity=%.3f", pur_lp)) + NoLegend()
 )
 
 wrap_plots(plots, ncol = 2)
@@ -241,11 +279,24 @@ Key takeaways:
   worst of over-emphasising PC 1.
 - **`log.scale = TRUE`** partially mitigates PC 1 dominance and recovers
   some ARI compared to full `prop.var`.
-- k-NN purity differences are small across all methods, indicating UMAP
-  topology is broadly preserved — the main effect is on Louvain cluster
-  resolution.
+- **`mp` (Marchenko–Pastur)** automatically zeros out noise PCs and
+  retains only those with variance above the random-matrix noise
+  ceiling. On datasets where most PCs are genuine signal it behaves like
+  `prop.var`; on noisier datasets it can sharpen clusters by discarding
+  uninformative PCs entirely.
+- **Local PCA UMAP** is not evaluated by ARI (it does not build a
+  clustering graph), but its k-NN purity reflects how well the embedding
+  locally preserves cell-type neighbourhoods. It can expose
+  trajectory-like geometry that global metrics miss.
+- k-NN purity differences are generally small across all methods,
+  indicating UMAP topology is broadly preserved — the main effect is on
+  Louvain cluster resolution.
 
 **Recommendation**: start with `weight.by = "stdev"` or
 `weight.by = "prop.var", weight.factor = 0.5`, and inspect cluster
 marker genes to judge whether the weighting is helping or obscuring
-biology in your dataset.
+biology in your dataset. Use `weight.by = "mp"` when you want a
+principled, data-driven noise threshold. Use
+[`RunLocalPCAUMAP()`](https://lachland.github.io/weightedUMAP/reference/RunLocalPCAUMAP.md)
+when you suspect the dataset has strong local anisotropic structure
+(trajectories, gradients) that a global metric would miss.
