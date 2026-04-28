@@ -1,15 +1,18 @@
 Package: wUMAP
-Title: Variance-Weighted PCA UMAP for Seurat Objects
+Title: PC-Distance Modification for UMAP in Seurat Objects
 Version: 0.1.0
 Authors@R: 
     person("Lachlan", "Dryburgh", role = c("aut", "cre"),
            email = "lachlan.dryburgh@example.com")
-Description: Provides RunWeightedUMAP() and RunWeightedNeighbors() for use
-    with Seurat objects. Each principal component axis is scaled by a weight
-    derived from its variance contribution before manifold learning, so that
-    biologically informative PCs dominate cell distances. RunWeightedNeighbors()
-    builds KNN/SNN graphs in the same weighted space, ensuring clustering and
-    UMAP share a consistent embedding.
+Description: Tools for modifying the PC-space distance used as input to UMAP
+    in Seurat workflows. Includes heuristic global PC-axis weighting
+    (RunWeightedUMAP(), RunWeightedNeighbors()), a principled noise-PC filter
+    based on the Marchenko-Pastur law (mp.filter), and a geometrically
+    motivated local PCA distance metric (RunLocalPCAUMAP(),
+    RunLocalPCANeighbors()) that measures cell–neighbour distances in a
+    locally-fitted PCA basis. Whether any modification improves results is
+    dataset-dependent; a benchmark vignette evaluates all approaches against
+    an independent ground truth.
 License: MIT + file LICENSE
 URL: https://lachland.github.io/weightedUMAP/, https://github.com/LachlanD/weightedUMAP
 BugReports: https://github.com/LachlanD/weightedUMAP/issues

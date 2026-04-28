@@ -1,8 +1,10 @@
-#' Run Variance-Weighted UMAP on a Seurat Object
+#' Run PC-Weighted UMAP on a Seurat Object
 #'
-#' Scales each principal component embedding by a weight derived from the
-#' variance explained by that component, then runs UMAP via \pkg{uwot}.
-#' The result is stored as a new `DimReduc` in the returned Seurat object.
+#' Runs UMAP via \pkg{uwot} with an optionally modified PC-space distance:
+#' each principal component axis can be scaled by a variance-derived weight
+#' (heuristic) and/or noise PCs can be zeroed by the Marchenko-Pastur
+#' criterion (\code{mp.filter}).  The result is stored as a new
+#' \code{DimReduc} in the returned Seurat object.
 #'
 #' @param object A Seurat object with a PCA (or other linear) reduction
 #'   already computed.

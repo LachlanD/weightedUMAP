@@ -2,7 +2,7 @@
 % Please edit documentation in R/run_weighted_umap.R
 \name{RunWeightedUMAP}
 \alias{RunWeightedUMAP}
-\title{Run Variance-Weighted UMAP on a Seurat Object}
+\title{Run PC-Weighted UMAP on a Seurat Object}
 \usage{
 RunWeightedUMAP(
   object,
@@ -116,9 +116,11 @@ The input Seurat \code{object} with a new \code{DimReduc} named
 }
 }
 \description{
-Scales each principal component embedding by a weight derived from the
-variance explained by that component, then runs UMAP via \pkg{uwot}.
-The result is stored as a new \code{DimReduc} in the returned Seurat object.
+Runs UMAP via \pkg{uwot} with an optionally modified PC-space distance:
+each principal component axis can be scaled by a variance-derived weight
+(heuristic) and/or noise PCs can be zeroed by the Marchenko-Pastur
+criterion (\code{mp.filter}).  The result is stored as a new
+\code{DimReduc} in the returned Seurat object.
 }
 \examples{
 \dontrun{

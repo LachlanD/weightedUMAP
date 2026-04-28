@@ -1,8 +1,8 @@
 ---
-title: "Variance-Weighted UMAP with wUMAP"
+title: "PC-Distance Modification for UMAP with wUMAP"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Variance-Weighted UMAP with wUMAP}
+  %\VignetteIndexEntry{PC-Distance Modification for UMAP with wUMAP}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -21,18 +21,37 @@ knitr::opts_chunk$set(
 
 ## Overview
 
-Standard UMAP treats every principal component (PC) equally. In scRNA-seq,
-early PCs capture far more biological variation than later ones — yet a
-standard UMAP over PCs 1–50 weights PC 50 the same as PC 1.
+When running UMAP on PCA coordinates, every PC is given equal weight in the
+Euclidean distance.  This is a reasonable default, but there are two distinct
+situations where modifying the input metric may be worth trying:
 
-**wUMAP** scales each PC axis by a weight derived from its variance contribution
-before handing the embedding to UMAP, giving more influence to early PCs in
-cell distance calculations.  These weighting schemes are **heuristic**: they
-change the input metric to UMAP but are not derived from a statistical model
-of how scRNA-seq noise is structured.  Whether any scheme improves results
-depends on the dataset; the benchmark vignette shows effects are often marginal.
-The default scheme is `weight.by = "stdev"` (normalised standard deviation),
-which applies the mildest transformation.
+**1. Noisy late PCs deserve less weight — or none at all.**
+PCA orders components by variance, so later PCs contain progressively less
+signal and more technical noise.  Passing `dims = 1:30` to `RunUMAP()` already
+addresses this coarsely by discarding the noisiest PCs.  The `mp.filter = TRUE`
+flag refines this by applying the **Marchenko-Pastur** law from random matrix
+theory, which gives a data-driven cutoff $\lambda_{\max} = (1 + \sqrt{p/n})^2$
+— PCs whose variance falls below that threshold are zeroed out automatically.
+This is the most principled feature in the package, though it is still an
+approximation (the MP law is exact for i.i.d. Gaussian matrices; log-normalised
+scRNA-seq data violates those assumptions).
+
+**2. Distances within a neighbourhood may be dominated by a single direction.**
+Standard UMAP uses a single global metric.  `RunLocalPCAUMAP()` instead
+measures the distance between each cell and its neighbours in a locally-fitted
+PCA basis, projecting displacements onto the dominant directions of variation
+in that neighbourhood.  This has geometric motivation for manifold-structured
+data.  Whether it improves clustering in practice is dataset-dependent
+(see the [Benchmark](benchmark.html) vignette).
+
+**What is purely heuristic:**
+The global weighting schemes `weight.by = "stdev"` and `weight.by = "prop.var"`
+continuously rescale PC coordinates by their variance contribution.  Unlike
+`mp.filter`, these are not derived from any statistical threshold — they are
+dials for exploring how much emphasis to place on early PCs.  The default
+`weight.by = "stdev"` applies the mildest transformation.  If you are unsure
+which to use, start with `mp.filter = TRUE` (principled exclusion of noise PCs)
+and the local PCA approach before experimenting with the weighting dials.
 
 ## Setup
 
