@@ -14,12 +14,25 @@
 #' @param weight.by Weighting scheme applied to PC scores before UMAP.
 #'   One of:
 #'   \describe{
+#'     \item{`"stdev"`}{Standard deviation, normalised (`sdev / sum(sdev)`).
+#'       Default. Gently up-weights early PCs while keeping intermediate ones
+#'       in play, giving a good balance between signal emphasis and layout
+#'       completeness.}
 #'     \item{`"prop.var"`}{Proportion of variance explained
-#'       (`sdev^2 / sum(sdev^2)`). Default.}
-#'     \item{`"stdev"`}{Standard deviation, normalised (`sdev / sum(sdev)`).}
+#'       (`sdev^2 / sum(sdev^2)`); more aggressively up-weights the dominant
+#'       PCs.  Use with `weight.factor < 1` or `log.scale = TRUE` to avoid
+#'       over-compression on datasets where PC 1 explains a large fraction of
+#'       variance.}
 #'     \item{`"none"`}{No weighting; equivalent to standard UMAP on PCA
 #'       scores.}
 #'   }
+#' @param mp.filter Logical. If `TRUE`, PCs whose variance is at or below the
+#'   Marchenko-Pastur bulk-noise threshold
+#'   (\eqn{\lambda_{\max} = (1 + \sqrt{p/n})^2}) are zeroed out after the
+#'   chosen `weight.by` weights are computed, and the remaining weights are
+#'   renormalised.  This makes MP an orthogonal filtering step compatible with
+#'   any weighting scheme.  Ignored when `weight.by = "none"` and no PCs are
+#'   above the threshold.  Default: `FALSE`.
 #' @param reduction.name Name under which to store the new UMAP reduction in
 #'   `object`. Default: `"wt.umap"`.
 #' @param reduction.key Column‐name prefix for the UMAP dimensions, e.g.
@@ -73,29 +86,28 @@
 #'
 #' # Assumes pbmc has PCA already run
 #'
+#' # Weighted UMAP — PCs scaled by standard deviation (default, recommended)
+#' pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, reduction.name = "wt.umap")
+#'
 #' # Standard UMAP — all PCs weighted equally
 #' pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "none",
 #'                         reduction.name = "umap.std")
 #'
-#' # Weighted UMAP — PCs scaled by proportion of variance explained
+#' # Proportion-of-variance weighting — more aggressive up-weighting of early PCs
 #' pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "prop.var",
-#'                         reduction.name = "wt.umap")
+#'                         reduction.name = "wt.umap.pv")
 #'
-#' # Log-scaled weights — compresses dynamic range so intermediate PCs
-#' # contribute more relative to the dominant PCs
-#' pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "prop.var",
-#'                         log.scale = TRUE, reduction.name = "wt.umap.log")
+#' # MP filtering: zero out noise PCs, then apply stdev weights to signal PCs
+#' pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, mp.filter = TRUE,
+#'                         reduction.name = "wt.umap.mp")
 #'
-#' # Standard deviation weighting
-#' pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "stdev",
-#'                         reduction.name = "wt.umap.sd")
-#'
-#' # Compare standard vs weighted side by side
-#' p1 <- DimPlot(pbmc, reduction = "umap.std",   label = TRUE) +
+#' # Compare standard vs weighted
+#' p1 <- DimPlot(pbmc, reduction = "umap.std", label = TRUE) +
 #'   ggtitle("Standard UMAP")
-#' p2 <- DimPlot(pbmc, reduction = "wt.umap",    label = TRUE) +
-#'   ggtitle("Weighted UMAP (prop.var)")
-#' p3 <- DimPlot(pbmc, reduction = "wt.umap.log", label = TRUE) +
+#' p2 <- DimPlot(pbmc, reduction = "wt.umap",  label = TRUE) +
+#'   ggtitle("Weighted UMAP (stdev)")
+#' p1 | p2
+#' }
 #'   ggtitle("Weighted UMAP (prop.var, log.scale)")
 #' p1 | p2
 #' }
@@ -103,7 +115,7 @@ RunWeightedUMAP <- function(
     object,
     reduction      = "pca",
     dims           = NULL,
-    weight.by      = c("prop.var", "stdev", "mp", "none"),
+    weight.by      = c("stdev", "prop.var", "none"),
     graph          = NULL,
     reduction.name = "wt.umap",
     reduction.key  = "wtUMAP_",
@@ -115,6 +127,7 @@ RunWeightedUMAP <- function(
     seed.use       = 42L,
     weight.factor  = 1,
     log.scale      = FALSE,
+    mp.filter      = FALSE,
     verbose        = TRUE,
     ...
 ) {
@@ -243,7 +256,8 @@ RunWeightedUMAP <- function(
   # ── Compute weighted embeddings via shared helper ────────────────────────────
   wt           <- .compute_weighted_embeddings(object, reduction, dims,
                                                weight.by, weight.factor,
-                                               log.scale, verbose)
+                                               log.scale, verbose,
+                                               mp.filter = mp.filter)
   emb          <- wt$emb
   weighted_emb <- wt$weighted_emb
   dims         <- wt$dims
@@ -278,6 +292,7 @@ RunWeightedUMAP <- function(
     assay      = source_assay,
     misc       = list(
       weight.by        = weight.by,
+      mp.filter        = mp.filter,
       weights          = wt$weights,
       source.reduction = reduction,
       dims.used        = dims

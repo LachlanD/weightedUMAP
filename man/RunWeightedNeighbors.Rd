@@ -8,13 +8,14 @@ RunWeightedNeighbors(
   object,
   reduction = "pca",
   dims = NULL,
-  weight.by = c("prop.var", "stdev", "mp", "none"),
+  weight.by = c("stdev", "prop.var", "none"),
   k.param = 20L,
   reduction.name = "wt.pca",
   reduction.key = "wtPCA_",
   prefix = "wt",
   weight.factor = 1,
   log.scale = FALSE,
+  mp.filter = FALSE,
   verbose = TRUE,
   ...
 )
@@ -33,9 +34,15 @@ than 50.}
 \item{weight.by}{Weighting scheme applied to PC scores before UMAP.
 One of:
 \describe{
+\item{\code{"stdev"}}{Standard deviation, normalised (\code{sdev / sum(sdev)}).
+Default. Gently up-weights early PCs while keeping intermediate ones
+in play, giving a good balance between signal emphasis and layout
+completeness.}
 \item{\code{"prop.var"}}{Proportion of variance explained
-(\code{sdev^2 / sum(sdev^2)}). Default.}
-\item{\code{"stdev"}}{Standard deviation, normalised (\code{sdev / sum(sdev)}).}
+(\code{sdev^2 / sum(sdev^2)}); more aggressively up-weights the dominant
+PCs.  Use with \code{weight.factor < 1} or \code{log.scale = TRUE} to avoid
+over-compression on datasets where PC 1 explains a large fraction of
+variance.}
 \item{\code{"none"}}{No weighting; equivalent to standard UMAP on PCA
 scores.}
 }}
@@ -68,6 +75,14 @@ weights before the \code{weight.factor} interpolation.  Should match the
 value used in the subsequent \code{\link{RunWeightedUMAP}} call.
 Default: \code{FALSE}.}
 
+\item{mp.filter}{Logical. If \code{TRUE}, PCs whose variance is at or below the
+Marchenko-Pastur bulk-noise threshold
+(\eqn{\lambda_{\max} = (1 + \sqrt{p/n})^2}) are zeroed out after the
+chosen \code{weight.by} weights are computed, and the remaining weights are
+renormalised.  This makes MP an orthogonal filtering step compatible with
+any weighting scheme.  Ignored when \code{weight.by = "none"} and no PCs are
+above the threshold.  Default: \code{FALSE}.}
+
 \item{verbose}{Print progress messages and per-PC weights? Default: \code{TRUE}.}
 
 \item{...}{Additional arguments forwarded to
@@ -97,26 +112,24 @@ visualisation share exactly the same nearest-neighbour structure.
 library(Seurat)
 library(wUMAP)
 
-# 1. Compute the weighted KNN/SNN graphs (same space for clustering + UMAP)
-pbmc <- RunWeightedNeighbors(pbmc, dims = 1:30, weight.by = "prop.var",
-                             prefix = "wt")
+# 1. Compute weighted KNN/SNN graphs — stdev weighting (default, recommended)
+pbmc <- RunWeightedNeighbors(pbmc, dims = 1:30, prefix = "wt")
 
 # 2. Cluster on the weighted SNN graph
 pbmc <- FindClusters(pbmc, graph.name = "wt_snn")
 
-# 3. UMAP from the same weighted KNN graph — topology is identical to step 2
+# 3. UMAP from the same weighted KNN graph — topology identical to step 2
 pbmc <- RunWeightedUMAP(pbmc, graph = "wt_nn", n.neighbors = 20,
                         reduction.name = "wt.umap")
 
 DimPlot(pbmc, reduction = "wt.umap", label = TRUE)
 
-# Use log.scale to compress the weight dynamic range so intermediate PCs
-# contribute more alongside the dominant early PCs
-pbmc <- RunWeightedNeighbors(pbmc, dims = 1:30, weight.by = "prop.var",
-                             log.scale = TRUE, prefix = "wt.log")
-pbmc <- FindClusters(pbmc, graph.name = "wt.log_snn")
-pbmc <- RunWeightedUMAP(pbmc, graph = "wt.log_nn",
-                        reduction.name = "wt.umap.log")
+# With MP filtering: discard noise PCs, then apply stdev weights
+pbmc <- RunWeightedNeighbors(pbmc, dims = 1:30, mp.filter = TRUE,
+                             prefix = "wt.mp")
+pbmc <- FindClusters(pbmc, graph.name = "wt.mp_snn")
+pbmc <- RunWeightedUMAP(pbmc, graph = "wt.mp_nn",
+                        reduction.name = "wt.umap.mp")
 }
 }
 \seealso{

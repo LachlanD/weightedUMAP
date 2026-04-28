@@ -10,6 +10,8 @@ RunLocalPCAUMAP(
   dims = NULL,
   k.param = 30L,
   local.dims = NULL,
+  local.weight.by = c("stdev", "prop.var", "none"),
+  mp.filter = FALSE,
   reduction.name = "lp.umap",
   reduction.key = "lpUMAP_",
   n.components = 2L,
@@ -32,7 +34,28 @@ Default: \code{30L}.}
 
 \item{local.dims}{Number of local PCA directions to retain when computing
 refined distances.  Must be \eqn{\leq} \code{k.param}.
-Default: \code{NULL} (uses all \code{k.param} directions).}
+Default: \code{NULL} (uses \code{k.param} directions).}
+
+\item{local.weight.by}{Weighting scheme applied to local PC directions.
+Analogous to \code{weight.by} in \code{\link{RunWeightedUMAP}}, but
+applied to the \emph{local} singular values of each neighbourhood SVD.
+\describe{
+\item{\code{"stdev"}}{Weight by local standard deviation
+(\eqn{s_l / \sum s}).  Default.  Gently emphasises the dominant
+local direction without collapsing minor variation.}
+\item{\code{"prop.var"}}{Weight each local PC by its proportion of
+local variance (\eqn{s_l^2 / \sum s^2}); more aggressively
+emphasises the leading local direction.}
+\item{\code{"none"}}{No weighting; equal contribution from all local
+PCs.}
+}}
+
+\item{mp.filter}{Logical. If \code{TRUE}, local PC directions whose local
+variance is at or below the per-neighbourhood Marchenko-Pastur noise
+threshold (\eqn{\lambda_{\max} = (1 + \sqrt{d/k})^2}) are zeroed out
+after the \code{local.weight.by} weights are computed, and the remaining
+weights are renormalised.  Can be combined with any \code{local.weight.by}
+scheme.  Default: \code{FALSE}.}
 
 \item{reduction.name}{Name under which to store the UMAP result.
 Default: \code{"lp.umap"}.}
@@ -54,7 +77,9 @@ Default: \code{"lpUMAP_"}.}
 }
 \value{
 The input Seurat \code{object} with a new DimReduc stored under
-\code{reduction.name}.
+\code{reduction.name}.  The \code{misc} slot records
+\code{source.reduction}, \code{dims.used}, \code{k.param},
+\code{local.dims}, and \code{local.weight.by}.
 }
 \description{
 Computes UMAP using a \strong{local PCA metric}: for each cell, the distance to
@@ -64,6 +89,11 @@ structure (e.g. the tangent direction of a trajectory) and de-emphasises
 transverse noise, producing a richer distance measure than a single global
 Euclidean metric.
 }
+\details{
+Optionally, each local PC direction can be weighted by its local variance
+contribution (\code{local.weight.by}), analogous to how \code{weight.by}
+weights global PCs in \code{\link{RunWeightedUMAP}}.
+}
 \section{Algorithm}{
 
 \enumerate{
@@ -71,9 +101,10 @@ Euclidean metric.
 the supplied PCA embedding (using \pkg{RANN}).
 \item For each cell \eqn{i}, collect its \eqn{k}-neighbourhood, centre by
 the neighbourhood mean, and compute a compact SVD.
-\item Re-express the displacement vectors from \eqn{i} to each neighbour
-in the local \code{local.dims} principal directions.
-\item Report the Euclidean norm in local-PC space as the refined distance.
+\item Optionally weight each of the \code{local.dims} local PC directions
+by its local variance contribution (\code{local.weight.by}).
+\item Report the (weighted) Euclidean norm in local-PC space as the
+refined distance.
 \item Pass the \eqn{n \times k} index/distance matrices directly to
 \code{\link[uwot]{umap}} as a precomputed k-NN graph.
 }
@@ -85,15 +116,32 @@ library(Seurat)
 library(wUMAP)
 
 # Assumes pbmc has PCA already run
+
+# Local PCA UMAP with stdev weighting of local PC directions (default)
 pbmc <- RunLocalPCAUMAP(pbmc, dims = 1:30, k.param = 30,
                         reduction.name = "lp.umap")
 
-# Compare to standard UMAP
-p1 <- DimPlot(pbmc, reduction = "umap",    label = TRUE) + ggtitle("Standard")
-p2 <- DimPlot(pbmc, reduction = "lp.umap", label = TRUE) + ggtitle("Local PCA")
-p1 | p2
+# Unweighted local PCA for comparison
+pbmc <- RunLocalPCAUMAP(pbmc, dims = 1:30, k.param = 30,
+                        local.weight.by = "none",
+                        reduction.name = "lp.umap.unweighted")
+
+# With MP filtering: zero local noise directions, then apply stdev weights
+pbmc <- RunLocalPCAUMAP(pbmc, dims = 1:30, k.param = 30,
+                        mp.filter = TRUE,
+                        reduction.name = "lp.umap.mp")
+
+# Compare standard, unweighted local PCA, and weighted local PCA
+p1 <- DimPlot(pbmc, reduction = "umap",               label = TRUE) +
+  ggtitle("Standard")
+p2 <- DimPlot(pbmc, reduction = "lp.umap.unweighted", label = TRUE) +
+  ggtitle("Local PCA (unweighted)")
+p3 <- DimPlot(pbmc, reduction = "lp.umap",            label = TRUE) +
+  ggtitle("Local PCA (stdev)")
+p1 | p2 | p3
 }
 }
 \seealso{
-\code{\link{RunWeightedUMAP}}, \code{\link{RunWeightedNeighbors}}
+\code{\link{RunLocalPCANeighbors}}, \code{\link{RunWeightedUMAP}},
+\code{\link{RunWeightedNeighbors}}
 }

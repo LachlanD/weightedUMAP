@@ -7,15 +7,20 @@
 #' transverse noise, producing a richer distance measure than a single global
 #' Euclidean metric.
 #'
+#' Optionally, each local PC direction can be weighted by its local variance
+#' contribution (\code{local.weight.by}), analogous to how \code{weight.by}
+#' weights global PCs in \code{\link{RunWeightedUMAP}}.
+#'
 #' @section Algorithm:
 #' \enumerate{
 #'   \item Find the global \code{k.param} nearest neighbours of every cell in
 #'     the supplied PCA embedding (using \pkg{RANN}).
 #'   \item For each cell \eqn{i}, collect its \eqn{k}-neighbourhood, centre by
 #'     the neighbourhood mean, and compute a compact SVD.
-#'   \item Re-express the displacement vectors from \eqn{i} to each neighbour
-#'     in the local \code{local.dims} principal directions.
-#'   \item Report the Euclidean norm in local-PC space as the refined distance.
+#'   \item Optionally weight each of the \code{local.dims} local PC directions
+#'     by its local variance contribution (\code{local.weight.by}).
+#'   \item Report the (weighted) Euclidean norm in local-PC space as the
+#'     refined distance.
 #'   \item Pass the \eqn{n \times k} index/distance matrices directly to
 #'     \code{\link[uwot]{umap}} as a precomputed k-NN graph.
 #' }
@@ -27,7 +32,26 @@
 #'   Default: \code{30L}.
 #' @param local.dims Number of local PCA directions to retain when computing
 #'   refined distances.  Must be \eqn{\leq} \code{k.param}.
-#'   Default: \code{NULL} (uses all \code{k.param} directions).
+#'   Default: \code{NULL} (uses \code{k.param} directions).
+#' @param local.weight.by Weighting scheme applied to local PC directions.
+#'   Analogous to \code{weight.by} in \code{\link{RunWeightedUMAP}}, but
+#'   applied to the \emph{local} singular values of each neighbourhood SVD.
+#'   \describe{
+#'     \item{\code{"stdev"}}{Weight by local standard deviation
+#'       (\eqn{s_l / \sum s}).  Default.  Gently emphasises the dominant
+#'       local direction without collapsing minor variation.}
+#'     \item{\code{"prop.var"}}{Weight each local PC by its proportion of
+#'       local variance (\eqn{s_l^2 / \sum s^2}); more aggressively
+#'       emphasises the leading local direction.}
+#'     \item{\code{"none"}}{No weighting; equal contribution from all local
+#'       PCs.}
+#'   }
+#' @param mp.filter Logical. If \code{TRUE}, local PC directions whose local
+#'   variance is at or below the per-neighbourhood Marchenko-Pastur noise
+#'   threshold (\eqn{\lambda_{\max} = (1 + \sqrt{d/k})^2}) are zeroed out
+#'   after the \code{local.weight.by} weights are computed, and the remaining
+#'   weights are renormalised.  Can be combined with any \code{local.weight.by}
+#'   scheme.  Default: \code{FALSE}.
 #' @param reduction.name Name under which to store the UMAP result.
 #'   Default: \code{"lp.umap"}.
 #' @param reduction.key Column-name prefix for the UMAP dimensions.
@@ -40,9 +64,12 @@
 #' @param ... Additional arguments forwarded to \code{\link[uwot]{umap}}.
 #'
 #' @return The input Seurat \code{object} with a new DimReduc stored under
-#'   \code{reduction.name}.
+#'   \code{reduction.name}.  The \code{misc} slot records
+#'   \code{source.reduction}, \code{dims.used}, \code{k.param},
+#'   \code{local.dims}, and \code{local.weight.by}.
 #'
-#' @seealso \code{\link{RunWeightedUMAP}}, \code{\link{RunWeightedNeighbors}}
+#' @seealso \code{\link{RunLocalPCANeighbors}}, \code{\link{RunWeightedUMAP}},
+#'   \code{\link{RunWeightedNeighbors}}
 #'
 #' @importFrom SeuratObject Embeddings Stdev DefaultAssay CreateDimReducObject
 #' @export
@@ -53,46 +80,64 @@
 #' library(wUMAP)
 #'
 #' # Assumes pbmc has PCA already run
+#'
+#' # Local PCA UMAP with stdev weighting of local PC directions (default)
 #' pbmc <- RunLocalPCAUMAP(pbmc, dims = 1:30, k.param = 30,
 #'                         reduction.name = "lp.umap")
 #'
-#' # Compare to standard UMAP
-#' p1 <- DimPlot(pbmc, reduction = "umap",    label = TRUE) + ggtitle("Standard")
-#' p2 <- DimPlot(pbmc, reduction = "lp.umap", label = TRUE) + ggtitle("Local PCA")
-#' p1 | p2
+#' # Unweighted local PCA for comparison
+#' pbmc <- RunLocalPCAUMAP(pbmc, dims = 1:30, k.param = 30,
+#'                         local.weight.by = "none",
+#'                         reduction.name = "lp.umap.unweighted")
+#'
+#' # With MP filtering: zero local noise directions, then apply stdev weights
+#' pbmc <- RunLocalPCAUMAP(pbmc, dims = 1:30, k.param = 30,
+#'                         mp.filter = TRUE,
+#'                         reduction.name = "lp.umap.mp")
+#'
+#' # Compare standard, unweighted local PCA, and weighted local PCA
+#' p1 <- DimPlot(pbmc, reduction = "umap",               label = TRUE) +
+#'   ggtitle("Standard")
+#' p2 <- DimPlot(pbmc, reduction = "lp.umap.unweighted", label = TRUE) +
+#'   ggtitle("Local PCA (unweighted)")
+#' p3 <- DimPlot(pbmc, reduction = "lp.umap",            label = TRUE) +
+#'   ggtitle("Local PCA (stdev)")
+#' p1 | p2 | p3
 #' }
 RunLocalPCAUMAP <- function(
     object,
-    reduction      = "pca",
-    dims           = NULL,
-    k.param        = 30L,
-    local.dims     = NULL,
-    reduction.name = "lp.umap",
-    reduction.key  = "lpUMAP_",
-    n.components   = 2L,
-    min.dist       = 0.3,
-    spread         = 1,
-    seed.use       = 42L,
-    verbose        = TRUE,
+    reduction       = "pca",
+    dims            = NULL,
+    k.param         = 30L,
+    local.dims      = NULL,
+    local.weight.by = c("stdev", "prop.var", "none"),
+    mp.filter       = FALSE,
+    reduction.name  = "lp.umap",
+    reduction.key   = "lpUMAP_",
+    n.components    = 2L,
+    min.dist        = 0.3,
+    spread          = 1,
+    seed.use        = 42L,
+    verbose         = TRUE,
     ...
 ) {
-  if (!requireNamespace("uwot",  quietly = TRUE))
+  if (!requireNamespace("uwot", quietly = TRUE))
     stop("Package 'uwot' is required. Install with install.packages('uwot').",
          call. = FALSE)
-  if (!requireNamespace("RANN",  quietly = TRUE))
+  if (!requireNamespace("RANN", quietly = TRUE))
     stop("Package 'RANN' is required. Install with install.packages('RANN').",
          call. = FALSE)
 
-  if (!reduction %in% names(object@reductions)) {
-    stop(sprintf(
-      "Reduction '%s' not found. Available: %s",
-      reduction, paste(names(object@reductions), collapse = ", ")
-    ), call. = FALSE)
-  }
+  local.weight.by <- match.arg(local.weight.by)
 
-  emb_full  <- Embeddings(object[[reduction]])
+  if (!reduction %in% names(object@reductions))
+    stop(sprintf("Reduction '%s' not found. Available: %s",
+                 reduction, paste(names(object@reductions), collapse = ", ")),
+         call. = FALSE)
+
+  emb_full <- Embeddings(object[[reduction]])
   sdev_full <- Stdev(object[[reduction]])
-  n_avail   <- min(ncol(emb_full), length(sdev_full))
+  n_avail  <- min(ncol(emb_full), length(sdev_full))
 
   if (is.null(dims)) {
     dims <- seq_len(n_avail)
@@ -108,7 +153,7 @@ RunLocalPCAUMAP <- function(
   n   <- nrow(emb)
   d   <- ncol(emb)
 
-  k.param   <- as.integer(k.param)
+  k.param <- as.integer(k.param)
   if (k.param < 2L || k.param >= n)
     stop("'k.param' must be between 2 and n-1.", call. = FALSE)
 
@@ -121,58 +166,27 @@ RunLocalPCAUMAP <- function(
   }
   local.dims <- min(local.dims, d)
 
-  if (verbose) {
+  if (verbose)
     message(sprintf(
-      "[wUMAP] RunLocalPCAUMAP: %d cells x %d dims, k = %d, local.dims = %d",
-      n, d, k.param, local.dims
+      "[wUMAP] RunLocalPCAUMAP: %d cells x %d dims, k = %d, local.dims = %d, local.weight.by = '%s', mp.filter = %s",
+      n, d, k.param, local.dims, local.weight.by, mp.filter
     ))
-    message("[wUMAP] Step 1/3: finding global k-NN ...")
-  }
 
-  # ── Step 1: global k-NN (k+1 to exclude self in first column) ───────────
-  nn_res  <- RANN::nn2(emb, k = k.param + 1L)
-  nn_idx  <- nn_res$nn.idx[, -1L, drop = FALSE]   # n x k (exclude self)
-
-  if (verbose) message("[wUMAP] Step 2/3: computing local PCA distances ...")
-
-  # ── Step 2: local PCA distances ──────────────────────────────────────────
-  local_dist <- matrix(0.0, nrow = n, ncol = k.param)
-
-  for (i in seq_len(n)) {
-    nbr_idx <- nn_idx[i, ]                      # k neighbour indices
-
-    # Neighbourhood matrix: focal cell + its k neighbours
-    X_nbr   <- emb[c(i, nbr_idx), , drop = FALSE]
-    X_ctr   <- X_nbr - matrix(colMeans(X_nbr), nrow = nrow(X_nbr),
-                               ncol = d, byrow = TRUE)
-
-    # Compact SVD — only need right singular vectors (local basis)
-    sv      <- tryCatch(
-      svd(X_ctr, nu = 0L, nv = local.dims),
-      error = function(e) NULL
-    )
-
-    if (is.null(sv)) {
-      # Fallback to raw Euclidean if SVD fails (e.g. degenerate neighbourhood)
-      local_dist[i, ] <- sqrt(rowSums((emb[nbr_idx, , drop=FALSE] -
-                                         matrix(emb[i, ], nrow = k.param,
-                                                ncol = d, byrow = TRUE))^2))
-      next
-    }
-
-    V      <- sv$v                              # d x local.dims local basis
-    xi     <- emb[i, , drop = FALSE]           # 1 x d focal cell
-
-    # Project displacement vectors onto local basis
-    delta  <- emb[nbr_idx, , drop = FALSE] - matrix(xi, nrow = k.param,
-                                                     ncol = d, byrow = TRUE)
-    proj   <- delta %*% V                      # k x local.dims
-    local_dist[i, ] <- sqrt(rowSums(proj^2))
-  }
+  # ── Compute local PCA distances (shared helper) ────────────────────────────
+  res <- .compute_local_pca_distances(
+    emb             = emb,
+    k.param         = k.param,
+    local.dims      = local.dims,
+    local.weight.by = local.weight.by,
+    mp.filter       = mp.filter,
+    verbose         = verbose
+  )
+  nn_idx     <- res$nn_idx
+  local_dist <- res$local_dist
 
   if (verbose) message("[wUMAP] Step 3/3: running UMAP on local PCA graph ...")
 
-  # ── Step 3: UMAP with precomputed kNN ────────────────────────────────────
+  # ── UMAP with precomputed kNN ─────────────────────────────────────────────
   if (!is.null(seed.use)) set.seed(seed.use)
 
   umap_mat <- uwot::umap(
@@ -202,15 +216,14 @@ RunLocalPCAUMAP <- function(
       source.reduction = reduction,
       dims.used        = dims,
       k.param          = k.param,
-      local.dims       = local.dims
+      local.dims       = local.dims,
+      local.weight.by  = local.weight.by,
+      mp.filter        = mp.filter
     )
   )
 
-  if (verbose) {
-    message(sprintf(
-      "[wUMAP] Stored as reduction '%s'.", reduction.name
-    ))
-  }
+  if (verbose)
+    message(sprintf("[wUMAP] Stored as reduction '%s'.", reduction.name))
 
   object
 }

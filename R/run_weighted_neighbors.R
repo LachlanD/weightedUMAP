@@ -53,38 +53,37 @@
 #' library(Seurat)
 #' library(wUMAP)
 #'
-#' # 1. Compute the weighted KNN/SNN graphs (same space for clustering + UMAP)
-#' pbmc <- RunWeightedNeighbors(pbmc, dims = 1:30, weight.by = "prop.var",
-#'                              prefix = "wt")
+#' # 1. Compute weighted KNN/SNN graphs — stdev weighting (default, recommended)
+#' pbmc <- RunWeightedNeighbors(pbmc, dims = 1:30, prefix = "wt")
 #'
 #' # 2. Cluster on the weighted SNN graph
 #' pbmc <- FindClusters(pbmc, graph.name = "wt_snn")
 #'
-#' # 3. UMAP from the same weighted KNN graph — topology is identical to step 2
+#' # 3. UMAP from the same weighted KNN graph — topology identical to step 2
 #' pbmc <- RunWeightedUMAP(pbmc, graph = "wt_nn", n.neighbors = 20,
 #'                         reduction.name = "wt.umap")
 #'
 #' DimPlot(pbmc, reduction = "wt.umap", label = TRUE)
 #'
-#' # Use log.scale to compress the weight dynamic range so intermediate PCs
-#' # contribute more alongside the dominant early PCs
-#' pbmc <- RunWeightedNeighbors(pbmc, dims = 1:30, weight.by = "prop.var",
-#'                              log.scale = TRUE, prefix = "wt.log")
-#' pbmc <- FindClusters(pbmc, graph.name = "wt.log_snn")
-#' pbmc <- RunWeightedUMAP(pbmc, graph = "wt.log_nn",
-#'                         reduction.name = "wt.umap.log")
+#' # With MP filtering: discard noise PCs, then apply stdev weights
+#' pbmc <- RunWeightedNeighbors(pbmc, dims = 1:30, mp.filter = TRUE,
+#'                              prefix = "wt.mp")
+#' pbmc <- FindClusters(pbmc, graph.name = "wt.mp_snn")
+#' pbmc <- RunWeightedUMAP(pbmc, graph = "wt.mp_nn",
+#'                         reduction.name = "wt.umap.mp")
 #' }
 RunWeightedNeighbors <- function(
     object,
     reduction      = "pca",
     dims           = NULL,
-    weight.by      = c("prop.var", "stdev", "mp", "none"),
+    weight.by      = c("stdev", "prop.var", "none"),
     k.param        = 20L,
     reduction.name = "wt.pca",
     reduction.key  = "wtPCA_",
     prefix         = "wt",
     weight.factor  = 1,
     log.scale      = FALSE,
+    mp.filter      = FALSE,
     verbose        = TRUE,
     ...
 ) {
@@ -110,7 +109,8 @@ RunWeightedNeighbors <- function(
 
   # ── Compute weighted embeddings ────────────────────────────────────────────
   wt <- .compute_weighted_embeddings(object, reduction, dims, weight.by,
-                                      weight.factor, log.scale, verbose)
+                                      weight.factor, log.scale, verbose,
+                                      mp.filter = mp.filter)
 
   # ── Store weighted embeddings as a new DimReduc ───────────────────────────
   source_assay <- tryCatch(
@@ -128,6 +128,7 @@ RunWeightedNeighbors <- function(
     assay      = source_assay,
     misc       = list(
       weight.by        = weight.by,
+      mp.filter        = mp.filter,
       weight.factor    = weight.factor,
       log.scale        = log.scale,
       weights          = wt$weights,
