@@ -23,6 +23,8 @@ Suggests:
     SeuratData,
     ggplot2,
     patchwork,
+    mclust,
+    RANN,
     knitr,
     rmarkdown,
     testthat (>= 3.0.0)

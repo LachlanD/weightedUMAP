@@ -250,6 +250,150 @@ Clustering and UMAP both derived from the same weighted KNN graph.
 </p>
 </div>
 </div>
+<div class="section level2">
+<h2 id="benchmark-does-weighting-improve-clustering">Benchmark: does weighting improve clustering?<a class="anchor" aria-label="anchor" href="#benchmark-does-weighting-improve-clustering"></a>
+</h2>
+<p>To evaluate clustering quality against an
+<strong>independent</strong> ground truth, we use the <code>cbmc</code>
+CITE-seq dataset from <code>SeuratData</code>. Each cell has both RNA
+and surface-protein (ADT) measurements — protein labels are derived from
+ADT, so they are orthogonal to RNA-based clustering and provide a
+genuine benchmark.</p>
+<p>We compare two metrics:</p>
+<ul>
+<li>
+<strong>ARI</strong> (Adjusted Rand Index): how well RNA clusters
+match protein-derived cell types. Range 0–1, higher = better.</li>
+<li>
+<strong>k-NN purity</strong>: fraction of each cell’s 20 nearest
+UMAP neighbours that share its protein label. Range 0–1, higher =
+better.</li>
+</ul>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mclust-org.github.io/mclust/" class="external-link">mclust</a></span><span class="op">)</span>  <span class="co"># for adjustedRandIndex</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/jefferislab/RANN" class="external-link">RANN</a></span><span class="op">)</span>    <span class="co"># for fast k-NN</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">cbmc</span><span class="op">)</span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.github.io/seurat-object/reference/UpdateSeuratObject.html" class="external-link">UpdateSeuratObject</a></span><span class="op">(</span><span class="va">cbmc</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Keep only cells with protein labels; remove doublets</span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="va">cbmc</span><span class="op">[</span>, <span class="op">!</span><span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="st">"T/Mono doublets"</span> <span class="op">&amp;</span></span>
+<span>               <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span><span class="op">]</span></span>
+<span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/NormalizeData.html" class="external-link">NormalizeData</a></span><span class="op">(</span><span class="va">cbmc</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindVariableFeatures.html" class="external-link">FindVariableFeatures</a></span><span class="op">(</span><span class="va">cbmc</span>, nfeatures <span class="op">=</span> <span class="fl">2000</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/ScaleData.html" class="external-link">ScaleData</a></span><span class="op">(</span><span class="va">cbmc</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/RunPCA.html" class="external-link">RunPCA</a></span><span class="op">(</span><span class="va">cbmc</span>, npcs <span class="op">=</span> <span class="fl">30</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">knn_purity</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">emb</span>, <span class="va">labels</span>, <span class="va">k</span> <span class="op">=</span> <span class="fl">20</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">nn</span>  <span class="op">&lt;-</span> <span class="fu">RANN</span><span class="fu">::</span><span class="fu"><a href="https://jefferislab.github.io/RANN/reference/nn2.html" class="external-link">nn2</a></span><span class="op">(</span><span class="va">emb</span>, k <span class="op">=</span> <span class="va">k</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span><span class="op">$</span><span class="va">nn.idx</span><span class="op">[</span>, <span class="op">-</span><span class="fl">1</span><span class="op">]</span></span>
+<span>  <span class="va">lab</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">labels</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">nn</span><span class="op">)</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">lab</span><span class="op">[</span><span class="va">nn</span><span class="op">[</span><span class="va">i</span>, <span class="op">]</span><span class="op">]</span> <span class="op">==</span> <span class="va">lab</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Standard</span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindNeighbors.html" class="external-link">FindNeighbors</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">cbmc</span>,  resolution <span class="op">=</span> <span class="fl">0.8</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/RunUMAP.html" class="external-link">RunUMAP</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, reduction.name <span class="op">=</span> <span class="st">"umap.std"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">ari_std</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://mclust-org.github.io/mclust/reference/adjustedRandIndex.html" class="external-link">adjustedRandIndex</a></span><span class="op">(</span><span class="va">cbmc</span><span class="op">$</span><span class="va">seurat_clusters</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span></span>
+<span><span class="va">pur_std</span> <span class="op">&lt;-</span> <span class="fu">knn_purity</span><span class="op">(</span><span class="fu"><a href="https://satijalab.github.io/seurat-object/reference/Embeddings.html" class="external-link">Embeddings</a></span><span class="op">(</span><span class="va">cbmc</span>, <span class="st">"umap.std"</span><span class="op">)</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># stdev weighted (gentler emphasis on early PCs)</span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunWeightedNeighbors.html">RunWeightedNeighbors</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, weight.by <span class="op">=</span> <span class="st">"stdev"</span>,</span>
+<span>                             prefix <span class="op">=</span> <span class="st">"wt"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">cbmc</span>, graph.name <span class="op">=</span> <span class="st">"wt_snn"</span>, resolution <span class="op">=</span> <span class="fl">0.8</span>,</span>
+<span>                     verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunWeightedUMAP.html">RunWeightedUMAP</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, weight.by <span class="op">=</span> <span class="st">"stdev"</span>,</span>
+<span>                        reduction.name <span class="op">=</span> <span class="st">"umap.wt"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">ari_wt</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://mclust-org.github.io/mclust/reference/adjustedRandIndex.html" class="external-link">adjustedRandIndex</a></span><span class="op">(</span><span class="va">cbmc</span><span class="op">$</span><span class="va">seurat_clusters</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span></span>
+<span><span class="va">pur_wt</span> <span class="op">&lt;-</span> <span class="fu">knn_purity</span><span class="op">(</span><span class="fu"><a href="https://satijalab.github.io/seurat-object/reference/Embeddings.html" class="external-link">Embeddings</a></span><span class="op">(</span><span class="va">cbmc</span>, <span class="st">"umap.wt"</span><span class="op">)</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://satijalab.github.io/seurat-object/reference/Idents.html" class="external-link">Idents</a></span><span class="op">(</span><span class="va">cbmc</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"protein_annotations"</span></span>
+<span><span class="va">p_std</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">cbmc</span>, reduction <span class="op">=</span> <span class="st">"umap.std"</span>, label <span class="op">=</span> <span class="cn">TRUE</span>, repel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Standard  ARI=%.3f  kNN=%.3f"</span>, <span class="va">ari_std</span>, <span class="va">pur_std</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">p_wt</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">cbmc</span>, reduction <span class="op">=</span> <span class="st">"umap.wt"</span>,  label <span class="op">=</span> <span class="cn">TRUE</span>, repel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"stdev weighted  ARI=%.3f  kNN=%.3f"</span>, <span class="va">ari_wt</span>, <span class="va">pur_wt</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">p_std</span> <span class="op">|</span> <span class="va">p_wt</span></span></code></pre></div>
+<div class="figure">
+<img src="wUMAP_files/figure-html/cbmc-bench-1.png" class="r-plt" alt="UMAP coloured by protein-derived cell type. Standard (left) vs stdev-weighted (right)." width="1500"><p class="caption">
+UMAP coloured by protein-derived cell type. Standard (left) vs
+stdev-weighted (right).
+</p>
+</div>
+<table class="table">
+<caption>Clustering quality vs protein labels on cbmc CITE-seq (n=7,699
+cells)</caption>
+<thead><tr class="header">
+<th align="left">Method</th>
+<th align="right">ARI</th>
+<th align="right">kNN_purity</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">standard (none)</td>
+<td align="right">0.548</td>
+<td align="right">0.927</td>
+</tr>
+<tr class="even">
+<td align="left">stdev</td>
+<td align="right">0.504</td>
+<td align="right">0.927</td>
+</tr>
+<tr class="odd">
+<td align="left">stdev + log.scale</td>
+<td align="right">0.503</td>
+<td align="right">0.929</td>
+</tr>
+<tr class="even">
+<td align="left">prop.var wf=0.5</td>
+<td align="right">0.496</td>
+<td align="right">0.924</td>
+</tr>
+<tr class="odd">
+<td align="left">prop.var wf=1</td>
+<td align="right">0.318</td>
+<td align="right">0.878</td>
+</tr>
+<tr class="even">
+<td align="left">prop.var + log.scale</td>
+<td align="right">0.398</td>
+<td align="right">0.880</td>
+</tr>
+</tbody>
+</table>
+<div class="section level3">
+<h3 id="interpretation">Interpretation<a class="anchor" aria-label="anchor" href="#interpretation"></a>
+</h3>
+<p>On this PBMC-like dataset, aggressive <code>prop.var</code> weighting
+(<em>wf=1</em>) <strong>reduces</strong> clustering quality (ARI 0.548 →
+0.318). This is because PC 1 in scRNA-seq often captures cell size or
+library-depth variation as much as cell type, so over-emphasising it
+pushes unrelated cells together.</p>
+<p>Key observations:</p>
+<ul>
+<li>
+<code>stdev</code> weighting produces only a modest reduction in ARI
+(0.548 → 0.504) while maintaining the same k-NN purity in UMAP space
+(0.927).</li>
+<li>
+<code>prop.var</code> with <code>weight.factor = 0.5</code> (partial
+blend) is a safer choice than full weighting.</li>
+<li>
+<code>log.scale = TRUE</code> partially mitigates the dominance of
+PC 1 and recovers some ARI compared to full <code>prop.var</code>.</li>
+<li>k-NN purity differences are small across all methods, suggesting the
+UMAP topology is similar — the main effect is on cluster
+resolution.</li>
+</ul>
+<p><strong>Recommendation:</strong> start with
+<code>weight.by = "stdev"</code> or
+<code>weight.by = "prop.var", weight.factor = 0.5</code> and inspect
+cluster marker genes to judge whether the weighting is helping reveal or
+obscuring biology in your specific dataset.</p>
+</div>
+</div>
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
