@@ -64,6 +64,8 @@ Euclidean metric.</p>
 <span>  dims <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  k.param <span class="op">=</span> <span class="fl">30L</span>,</span>
 <span>  local.dims <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  local.weight.by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"stdev"</span>, <span class="st">"prop.var"</span>, <span class="st">"none"</span><span class="op">)</span>,</span>
+<span>  mp.filter <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  reduction.name <span class="op">=</span> <span class="st">"lp.umap"</span>,</span>
 <span>  reduction.key <span class="op">=</span> <span class="st">"lpUMAP_"</span>,</span>
 <span>  n.components <span class="op">=</span> <span class="fl">2L</span>,</span>
@@ -99,7 +101,37 @@ Default: <code>30L</code>.</p></dd>
 <dt id="arg-local-dims">local.dims<a class="anchor" aria-label="anchor" href="#arg-local-dims"></a></dt>
 <dd><p>Number of local PCA directions to retain when computing
 refined distances.  Must be \(\leq\) <code>k.param</code>.
-Default: <code>NULL</code> (uses all <code>k.param</code> directions).</p></dd>
+Default: <code>NULL</code> (uses <code>k.param</code> directions).</p></dd>
+
+
+<dt id="arg-local-weight-by">local.weight.by<a class="anchor" aria-label="anchor" href="#arg-local-weight-by"></a></dt>
+<dd><p>Weighting scheme applied to local PC directions.
+Analogous to <code>weight.by</code> in <code><a href="RunWeightedUMAP.html">RunWeightedUMAP</a></code>, but
+applied to the <em>local</em> singular values of each neighbourhood SVD.</p><dl><dt><code>"stdev"</code></dt>
+<dd><p>Weight by local standard deviation
+(\(s_l / \sum s\)).  Default.  Gently emphasises the dominant
+local direction without collapsing minor variation.</p></dd>
+
+<dt><code>"prop.var"</code></dt>
+<dd><p>Weight each local PC by its proportion of
+local variance (\(s_l^2 / \sum s^2\)); more aggressively
+emphasises the leading local direction.</p></dd>
+
+<dt><code>"none"</code></dt>
+<dd><p>No weighting; equal contribution from all local
+PCs.</p></dd>
+
+
+</dl></dd>
+
+
+<dt id="arg-mp-filter">mp.filter<a class="anchor" aria-label="anchor" href="#arg-mp-filter"></a></dt>
+<dd><p>Logical. If <code>TRUE</code>, local PC directions whose local
+variance is at or below the per-neighbourhood Marchenko-Pastur noise
+threshold (\(\lambda_{\max} = (1 + \sqrt{d/k})^2\)) are zeroed out
+after the <code>local.weight.by</code> weights are computed, and the remaining
+weights are renormalised.  Can be combined with any <code>local.weight.by</code>
+scheme.  Default: <code>FALSE</code>.</p></dd>
 
 
 <dt id="arg-reduction-name">reduction.name<a class="anchor" aria-label="anchor" href="#arg-reduction-name"></a></dt>
@@ -139,7 +171,15 @@ Default: <code>"lpUMAP_"</code>.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>The input Seurat <code>object</code> with a new DimReduc stored under
-<code>reduction.name</code>.</p>
+<code>reduction.name</code>.  The <code>misc</code> slot records
+<code>source.reduction</code>, <code>dims.used</code>, <code>k.param</code>,
+<code>local.dims</code>, and <code>local.weight.by</code>.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>Optionally, each local PC direction can be weighted by its local variance
+contribution (<code>local.weight.by</code>), analogous to how <code>weight.by</code>
+weights global PCs in <code><a href="RunWeightedUMAP.html">RunWeightedUMAP</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="algorithm">Algorithm<a class="anchor" aria-label="anchor" href="#algorithm"></a></h2>
@@ -149,15 +189,17 @@ Default: <code>"lpUMAP_"</code>.</p></dd>
 the supplied PCA embedding (using <span class="pkg">RANN</span>).</p></li>
 <li><p>For each cell \(i\), collect its \(k\)-neighbourhood, centre by
 the neighbourhood mean, and compute a compact SVD.</p></li>
-<li><p>Re-express the displacement vectors from \(i\) to each neighbour
-in the local <code>local.dims</code> principal directions.</p></li>
-<li><p>Report the Euclidean norm in local-PC space as the refined distance.</p></li>
+<li><p>Optionally weight each of the <code>local.dims</code> local PC directions
+by its local variance contribution (<code>local.weight.by</code>).</p></li>
+<li><p>Report the (weighted) Euclidean norm in local-PC space as the
+refined distance.</p></li>
 <li><p>Pass the \(n \times k\) index/distance matrices directly to
 <code><a href="https://jlmelville.github.io/uwot/reference/umap.html" class="external-link">umap</a></code> as a precomputed k-NN graph.</p></li>
 </ol></div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="RunWeightedUMAP.html">RunWeightedUMAP</a></code>, <code><a href="RunWeightedNeighbors.html">RunWeightedNeighbors</a></code></p></div>
+    <div class="dont-index"><p><code><a href="RunLocalPCANeighbors.html">RunLocalPCANeighbors</a></code>, <code><a href="RunWeightedUMAP.html">RunWeightedUMAP</a></code>,
+<code><a href="RunWeightedNeighbors.html">RunWeightedNeighbors</a></code></p></div>
     </div>
 
     <div class="section level2">
@@ -167,13 +209,29 @@ in the local <code>local.dims</code> principal directions.</p></li>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">wUMAP</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Assumes pbmc has PCA already run</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Local PCA UMAP with stdev weighting of local PC directions (default)</span></span></span>
 <span class="r-in"><span><span class="va">pbmc</span> <span class="op">&lt;-</span> <span class="fu">RunLocalPCAUMAP</span><span class="op">(</span><span class="va">pbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="fl">30</span>,</span></span>
 <span class="r-in"><span>                        reduction.name <span class="op">=</span> <span class="st">"lp.umap"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Compare to standard UMAP</span></span></span>
-<span class="r-in"><span><span class="va">p1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">pbmc</span>, reduction <span class="op">=</span> <span class="st">"umap"</span>,    label <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span> <span class="fu">ggtitle</span><span class="op">(</span><span class="st">"Standard"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">p2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">pbmc</span>, reduction <span class="op">=</span> <span class="st">"lp.umap"</span>, label <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span> <span class="fu">ggtitle</span><span class="op">(</span><span class="st">"Local PCA"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">p1</span> <span class="op">|</span> <span class="va">p2</span></span></span>
+<span class="r-in"><span><span class="co"># Unweighted local PCA for comparison</span></span></span>
+<span class="r-in"><span><span class="va">pbmc</span> <span class="op">&lt;-</span> <span class="fu">RunLocalPCAUMAP</span><span class="op">(</span><span class="va">pbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="fl">30</span>,</span></span>
+<span class="r-in"><span>                        local.weight.by <span class="op">=</span> <span class="st">"none"</span>,</span></span>
+<span class="r-in"><span>                        reduction.name <span class="op">=</span> <span class="st">"lp.umap.unweighted"</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># With MP filtering: zero local noise directions, then apply stdev weights</span></span></span>
+<span class="r-in"><span><span class="va">pbmc</span> <span class="op">&lt;-</span> <span class="fu">RunLocalPCAUMAP</span><span class="op">(</span><span class="va">pbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="fl">30</span>,</span></span>
+<span class="r-in"><span>                        mp.filter <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
+<span class="r-in"><span>                        reduction.name <span class="op">=</span> <span class="st">"lp.umap.mp"</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Compare standard, unweighted local PCA, and weighted local PCA</span></span></span>
+<span class="r-in"><span><span class="va">p1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">pbmc</span>, reduction <span class="op">=</span> <span class="st">"umap"</span>,               label <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span>  <span class="fu">ggtitle</span><span class="op">(</span><span class="st">"Standard"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">p2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">pbmc</span>, reduction <span class="op">=</span> <span class="st">"lp.umap.unweighted"</span>, label <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span>  <span class="fu">ggtitle</span><span class="op">(</span><span class="st">"Local PCA (unweighted)"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">p3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">pbmc</span>, reduction <span class="op">=</span> <span class="st">"lp.umap"</span>,            label <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span>  <span class="fu">ggtitle</span><span class="op">(</span><span class="st">"Local PCA (stdev)"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">p1</span> <span class="op">|</span> <span class="va">p2</span> <span class="op">|</span> <span class="va">p3</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

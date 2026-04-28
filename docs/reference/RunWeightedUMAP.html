@@ -53,7 +53,7 @@ The result is stored as a new <code>DimReduc</code> in the returned Seurat objec
 <span>  <span class="va">object</span>,</span>
 <span>  reduction <span class="op">=</span> <span class="st">"pca"</span>,</span>
 <span>  dims <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  weight.by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"prop.var"</span>, <span class="st">"stdev"</span>, <span class="st">"mp"</span>, <span class="st">"none"</span><span class="op">)</span>,</span>
+<span>  weight.by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"stdev"</span>, <span class="st">"prop.var"</span>, <span class="st">"none"</span><span class="op">)</span>,</span>
 <span>  graph <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  reduction.name <span class="op">=</span> <span class="st">"wt.umap"</span>,</span>
 <span>  reduction.key <span class="op">=</span> <span class="st">"wtUMAP_"</span>,</span>
@@ -65,6 +65,7 @@ The result is stored as a new <code>DimReduc</code> in the returned Seurat objec
 <span>  seed.use <span class="op">=</span> <span class="fl">42L</span>,</span>
 <span>  weight.factor <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  log.scale <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  mp.filter <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -92,12 +93,18 @@ than 50.</p></dd>
 
 <dt id="arg-weight-by">weight.by<a class="anchor" aria-label="anchor" href="#arg-weight-by"></a></dt>
 <dd><p>Weighting scheme applied to PC scores before UMAP.
-One of:</p><dl><dt><code>"prop.var"</code></dt>
-<dd><p>Proportion of variance explained
-(<code>sdev^2 / sum(sdev^2)</code>). Default.</p></dd>
+One of:</p><dl><dt><code>"stdev"</code></dt>
+<dd><p>Standard deviation, normalised (<code>sdev / sum(sdev)</code>).
+Default. Gently up-weights early PCs while keeping intermediate ones
+in play, giving a good balance between signal emphasis and layout
+completeness.</p></dd>
 
-<dt><code>"stdev"</code></dt>
-<dd><p>Standard deviation, normalised (<code>sdev / sum(sdev)</code>).</p></dd>
+<dt><code>"prop.var"</code></dt>
+<dd><p>Proportion of variance explained
+(<code>sdev^2 / sum(sdev^2)</code>); more aggressively up-weights the dominant
+PCs.  Use with <code>weight.factor &lt; 1</code> or <code>log.scale = TRUE</code> to avoid
+over-compression on datasets where PC 1 explains a large fraction of
+variance.</p></dd>
 
 <dt><code>"none"</code></dt>
 <dd><p>No weighting; equivalent to standard UMAP on PCA
@@ -171,6 +178,16 @@ so that intermediate PCs receive relatively more influence.  Ignored
 when <code>weight.by = "none"</code>.  Default: <code>FALSE</code>.</p></dd>
 
 
+<dt id="arg-mp-filter">mp.filter<a class="anchor" aria-label="anchor" href="#arg-mp-filter"></a></dt>
+<dd><p>Logical. If <code>TRUE</code>, PCs whose variance is at or below the
+Marchenko-Pastur bulk-noise threshold
+(\(\lambda_{\max} = (1 + \sqrt{p/n})^2\)) are zeroed out after the
+chosen <code>weight.by</code> weights are computed, and the remaining weights are
+renormalised.  This makes MP an orthogonal filtering step compatible with
+any weighting scheme.  Ignored when <code>weight.by = "none"</code> and no PCs are
+above the threshold.  Default: <code>FALSE</code>.</p></dd>
+
+
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
 <dd><p>Print progress messages and per-PC weights? Default: <code>TRUE</code>.</p></dd>
 
@@ -188,43 +205,6 @@ when <code>weight.by = "none"</code>.  Default: <code>FALSE</code>.</p></dd>
 <li><p><code>dims.used</code> — integer vector of dimensions used</p></li>
 </ul></div>
 
-    <div class="section level2">
-    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://satijalab.org/seurat" class="external-link">Seurat</a></span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">wUMAP</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://patchwork.data-imaginist.com" class="external-link">patchwork</a></span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Assumes pbmc has PCA already run</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Standard UMAP — all PCs weighted equally</span></span></span>
-<span class="r-in"><span><span class="va">pbmc</span> <span class="op">&lt;-</span> <span class="fu">RunWeightedUMAP</span><span class="op">(</span><span class="va">pbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, weight.by <span class="op">=</span> <span class="st">"none"</span>,</span></span>
-<span class="r-in"><span>                        reduction.name <span class="op">=</span> <span class="st">"umap.std"</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Weighted UMAP — PCs scaled by proportion of variance explained</span></span></span>
-<span class="r-in"><span><span class="va">pbmc</span> <span class="op">&lt;-</span> <span class="fu">RunWeightedUMAP</span><span class="op">(</span><span class="va">pbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, weight.by <span class="op">=</span> <span class="st">"prop.var"</span>,</span></span>
-<span class="r-in"><span>                        reduction.name <span class="op">=</span> <span class="st">"wt.umap"</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Log-scaled weights — compresses dynamic range so intermediate PCs</span></span></span>
-<span class="r-in"><span><span class="co"># contribute more relative to the dominant PCs</span></span></span>
-<span class="r-in"><span><span class="va">pbmc</span> <span class="op">&lt;-</span> <span class="fu">RunWeightedUMAP</span><span class="op">(</span><span class="va">pbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, weight.by <span class="op">=</span> <span class="st">"prop.var"</span>,</span></span>
-<span class="r-in"><span>                        log.scale <span class="op">=</span> <span class="cn">TRUE</span>, reduction.name <span class="op">=</span> <span class="st">"wt.umap.log"</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Standard deviation weighting</span></span></span>
-<span class="r-in"><span><span class="va">pbmc</span> <span class="op">&lt;-</span> <span class="fu">RunWeightedUMAP</span><span class="op">(</span><span class="va">pbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, weight.by <span class="op">=</span> <span class="st">"stdev"</span>,</span></span>
-<span class="r-in"><span>                        reduction.name <span class="op">=</span> <span class="st">"wt.umap.sd"</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Compare standard vs weighted side by side</span></span></span>
-<span class="r-in"><span><span class="va">p1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">pbmc</span>, reduction <span class="op">=</span> <span class="st">"umap.std"</span>,   label <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span></span>
-<span class="r-in"><span>  <span class="fu">ggtitle</span><span class="op">(</span><span class="st">"Standard UMAP"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">p2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">pbmc</span>, reduction <span class="op">=</span> <span class="st">"wt.umap"</span>,    label <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span></span>
-<span class="r-in"><span>  <span class="fu">ggtitle</span><span class="op">(</span><span class="st">"Weighted UMAP (prop.var)"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">p3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">pbmc</span>, reduction <span class="op">=</span> <span class="st">"wt.umap.log"</span>, label <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span></span>
-<span class="r-in"><span>  <span class="fu">ggtitle</span><span class="op">(</span><span class="st">"Weighted UMAP (prop.var, log.scale)"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">p1</span> <span class="op">|</span> <span class="va">p2</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
-</code></pre></div>
-    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 
