@@ -219,7 +219,158 @@ ari_lp_mp  <- adjustedRandIndex(cbmc$seurat_clusters, cbmc$protein_annotations)
 pur_lp_mp  <- knn_purity(Embeddings(cbmc, "umap.lp.mp"), cbmc$protein_annotations)
 ```
 
-## Results
+## Local PCA: parameter sweep
+
+The `k.param` and `local.dims` parameters control two orthogonal aspects of
+the local PCA metric:
+
+- **`k.param`**: neighbourhood size.  Smaller values capture finer local
+  structure but produce noisier SVDs; larger values smooth out local variation
+  and converge toward a global metric.
+- **`local.dims`**: how many local PC directions to retain.  Truncating to
+  fewer directions discards the weakest local axes, which is an alternative
+  (non-probabilistic) form of noise filtering.
+
+We fix `local.weight.by = "stdev"` throughout and vary each parameter in turn.
+
+```{r local-pca-sweep}
+set.seed(42)
+
+# ── k.param sweep (local.dims = k.param, stdev weighting) ──────────────────
+cbmc <- RunLocalPCANeighbors(cbmc, dims = 1:30, k.param = 10L,
+                             local.weight.by = "stdev",
+                             prefix = "lp.k10", verbose = FALSE)
+cbmc <- FindClusters(cbmc, graph.name = "lp.k10_snn",
+                     resolution = 0.8, verbose = FALSE)
+cbmc <- RunLocalPCAUMAP(cbmc, dims = 1:30, k.param = 10L,
+                        local.weight.by = "stdev",
+                        reduction.name = "umap.lp.k10", verbose = FALSE)
+ari_lp_k10 <- adjustedRandIndex(cbmc$seurat_clusters, cbmc$protein_annotations)
+pur_lp_k10 <- knn_purity(Embeddings(cbmc, "umap.lp.k10"), cbmc$protein_annotations)
+
+cbmc <- RunLocalPCANeighbors(cbmc, dims = 1:30, k.param = 20L,
+                             local.weight.by = "stdev",
+                             prefix = "lp.k20", verbose = FALSE)
+cbmc <- FindClusters(cbmc, graph.name = "lp.k20_snn",
+                     resolution = 0.8, verbose = FALSE)
+cbmc <- RunLocalPCAUMAP(cbmc, dims = 1:30, k.param = 20L,
+                        local.weight.by = "stdev",
+                        reduction.name = "umap.lp.k20", verbose = FALSE)
+ari_lp_k20 <- adjustedRandIndex(cbmc$seurat_clusters, cbmc$protein_annotations)
+pur_lp_k20 <- knn_purity(Embeddings(cbmc, "umap.lp.k20"), cbmc$protein_annotations)
+
+cbmc <- RunLocalPCANeighbors(cbmc, dims = 1:30, k.param = 50L,
+                             local.weight.by = "stdev",
+                             prefix = "lp.k50", verbose = FALSE)
+cbmc <- FindClusters(cbmc, graph.name = "lp.k50_snn",
+                     resolution = 0.8, verbose = FALSE)
+cbmc <- RunLocalPCAUMAP(cbmc, dims = 1:30, k.param = 50L,
+                        local.weight.by = "stdev",
+                        reduction.name = "umap.lp.k50", verbose = FALSE)
+ari_lp_k50 <- adjustedRandIndex(cbmc$seurat_clusters, cbmc$protein_annotations)
+pur_lp_k50 <- knn_purity(Embeddings(cbmc, "umap.lp.k50"), cbmc$protein_annotations)
+
+# ── local.dims sweep (k.param = 30, stdev weighting) ───────────────────────
+cbmc <- RunLocalPCANeighbors(cbmc, dims = 1:30, k.param = 30L,
+                             local.dims = 5L, local.weight.by = "stdev",
+                             prefix = "lp.ld5", verbose = FALSE)
+cbmc <- FindClusters(cbmc, graph.name = "lp.ld5_snn",
+                     resolution = 0.8, verbose = FALSE)
+cbmc <- RunLocalPCAUMAP(cbmc, dims = 1:30, k.param = 30L,
+                        local.dims = 5L, local.weight.by = "stdev",
+                        reduction.name = "umap.lp.ld5", verbose = FALSE)
+ari_lp_ld5 <- adjustedRandIndex(cbmc$seurat_clusters, cbmc$protein_annotations)
+pur_lp_ld5 <- knn_purity(Embeddings(cbmc, "umap.lp.ld5"), cbmc$protein_annotations)
+
+cbmc <- RunLocalPCANeighbors(cbmc, dims = 1:30, k.param = 30L,
+                             local.dims = 10L, local.weight.by = "stdev",
+                             prefix = "lp.ld10", verbose = FALSE)
+cbmc <- FindClusters(cbmc, graph.name = "lp.ld10_snn",
+                     resolution = 0.8, verbose = FALSE)
+cbmc <- RunLocalPCAUMAP(cbmc, dims = 1:30, k.param = 30L,
+                        local.dims = 10L, local.weight.by = "stdev",
+                        reduction.name = "umap.lp.ld10", verbose = FALSE)
+ari_lp_ld10 <- adjustedRandIndex(cbmc$seurat_clusters, cbmc$protein_annotations)
+pur_lp_ld10 <- knn_purity(Embeddings(cbmc, "umap.lp.ld10"), cbmc$protein_annotations)
+
+cbmc <- RunLocalPCANeighbors(cbmc, dims = 1:30, k.param = 30L,
+                             local.dims = 15L, local.weight.by = "stdev",
+                             prefix = "lp.ld15", verbose = FALSE)
+cbmc <- FindClusters(cbmc, graph.name = "lp.ld15_snn",
+                     resolution = 0.8, verbose = FALSE)
+cbmc <- RunLocalPCAUMAP(cbmc, dims = 1:30, k.param = 30L,
+                        local.dims = 15L, local.weight.by = "stdev",
+                        reduction.name = "umap.lp.ld15", verbose = FALSE)
+ari_lp_ld15 <- adjustedRandIndex(cbmc$seurat_clusters, cbmc$protein_annotations)
+pur_lp_ld15 <- knn_purity(Embeddings(cbmc, "umap.lp.ld15"), cbmc$protein_annotations)
+```
+
+```{r local-pca-sweep-table}
+sweep_results <- data.frame(
+  Setting = c(
+    "k=10  (local.dims=10)",
+    "k=20  (local.dims=20)",
+    "k=30  (local.dims=30, baseline)",
+    "k=50  (local.dims=50)",
+    "k=30, local.dims=5",
+    "k=30, local.dims=10",
+    "k=30, local.dims=15",
+    "k=30, local.dims=30 (baseline)"
+  ),
+  Varied     = c(rep("k.param", 4), rep("local.dims", 4)),
+  ARI        = c(ari_lp_k10, ari_lp_k20, ari_lp, ari_lp_k50,
+                 ari_lp_ld5, ari_lp_ld10, ari_lp_ld15, ari_lp),
+  kNN_purity = c(pur_lp_k10, pur_lp_k20, pur_lp, pur_lp_k50,
+                 pur_lp_ld5, pur_lp_ld10, pur_lp_ld15, pur_lp)
+)
+knitr::kable(sweep_results, digits = 3,
+  caption = "Local PCA parameter sweep (local.weight.by = 'stdev' throughout).")
+```
+
+```{r local-pca-sweep-plot, fig.height=7, fig.cap="Local PCA parameter sweep. Dashed line = standard UMAP ARI baseline."}
+sweep_long <- tidyr::pivot_longer(sweep_results, cols = c("ARI", "kNN_purity"),
+                                  names_to = "Metric", values_to = "Score")
+sweep_long$Setting <- factor(sweep_long$Setting, levels = sweep_results$Setting)
+sweep_long$Varied  <- factor(sweep_long$Varied,  levels = c("k.param", "local.dims"))
+
+ggplot(sweep_long, aes(x = Setting, y = Score, fill = Varied)) +
+  geom_col(show.legend = TRUE) +
+  geom_hline(data = data.frame(
+    Metric = c("ARI", "kNN_purity"), Score = c(ari_std, pur_std)),
+    aes(yintercept = Score), linetype = "dashed", colour = "grey40") +
+  facet_wrap(~Metric, scales = "free_y") +
+  scale_fill_manual(values = c("k.param" = "#4393C3", "local.dims" = "#D6604D")) +
+  coord_flip() +
+  labs(x = NULL, y = NULL, fill = "Parameter varied",
+       title = "Local PCA parameter sweep (stdev weighting)",
+       subtitle = "Dashed line = standard UMAP baseline") +
+  theme_bw(base_size = 12)
+```
+
+```{r local-pca-sweep-umaps, fig.height=14, fig.cap="k.param sweep (top, stdev weighting) and local.dims sweep (bottom, k=30, stdev weighting)."}
+Idents(cbmc) <- "protein_annotations"
+sweep_plots <- list(
+  DimPlot(cbmc, reduction = "umap.lp.k10",  label = TRUE, repel = TRUE) +
+    ggtitle(sprintf("k=10  ARI=%.3f",  ari_lp_k10))  + NoLegend(),
+  DimPlot(cbmc, reduction = "umap.lp.k20",  label = TRUE, repel = TRUE) +
+    ggtitle(sprintf("k=20  ARI=%.3f",  ari_lp_k20))  + NoLegend(),
+  DimPlot(cbmc, reduction = "umap.lp",      label = TRUE, repel = TRUE) +
+    ggtitle(sprintf("k=30 (baseline)  ARI=%.3f", ari_lp)) + NoLegend(),
+  DimPlot(cbmc, reduction = "umap.lp.k50",  label = TRUE, repel = TRUE) +
+    ggtitle(sprintf("k=50  ARI=%.3f",  ari_lp_k50))  + NoLegend(),
+  DimPlot(cbmc, reduction = "umap.lp.ld5",  label = TRUE, repel = TRUE) +
+    ggtitle(sprintf("local.dims=5  ARI=%.3f",  ari_lp_ld5))  + NoLegend(),
+  DimPlot(cbmc, reduction = "umap.lp.ld10", label = TRUE, repel = TRUE) +
+    ggtitle(sprintf("local.dims=10  ARI=%.3f", ari_lp_ld10)) + NoLegend(),
+  DimPlot(cbmc, reduction = "umap.lp.ld15", label = TRUE, repel = TRUE) +
+    ggtitle(sprintf("local.dims=15  ARI=%.3f", ari_lp_ld15)) + NoLegend(),
+  DimPlot(cbmc, reduction = "umap.lp",      label = TRUE, repel = TRUE) +
+    ggtitle(sprintf("local.dims=30 (baseline)  ARI=%.3f", ari_lp)) + NoLegend()
+)
+wrap_plots(sweep_plots, ncol = 2)
+```
+
+
 
 ```{r results-table}
 results <- data.frame(
@@ -324,9 +475,37 @@ Key takeaways:
   datasets where most PCs are genuine signal it behaves like the base scheme;
   on noisier datasets it can sharpen clusters.
 
-### Local PCA results
+### Local PCA parameter sweep
 
-The four local PCA variants differ in how per-neighbourhood singular values are
+```{r sweep-summary}
+k_aris  <- c(ari_lp_k10, ari_lp_k20, ari_lp, ari_lp_k50)
+k_vals  <- c(10, 20, 30, 50)
+best_k  <- k_vals[which.max(k_aris)]
+
+ld_aris <- c(ari_lp_ld5, ari_lp_ld10, ari_lp_ld15, ari_lp)
+ld_vals <- c(5, 10, 15, 30)
+best_ld <- ld_vals[which.max(ld_aris)]
+```
+
+For the **k.param sweep**, `k = `r best_k`` achieves the highest ARI
+(`r round(k_aris[k_vals == best_k], 3)`).
+
+- If ARI improves at smaller k, finer local structure (e.g. subtle sub-types)
+  is being captured.
+- If ARI is flat across k, the local SVD is not providing information beyond
+  a global metric on this dataset.
+- If ARI degrades at very small k (e.g. k=10), the neighbourhood is too small
+  for a stable SVD and the metric becomes noisy.
+
+For the **local.dims sweep** (k=30), `local.dims = `r best_ld`` achieves the
+highest ARI (`r round(ld_aris[ld_vals == best_ld], 3)`).
+
+- If fewer local dims performs better, the weaker local directions add noise
+  rather than signal — truncation acts as implicit regularisation.
+- If all dims perform similarly, the choice of `local.dims` is not a sensitive
+  parameter for this dataset.
+
+
 combined into a distance:
 
 | Setting | What it does |
