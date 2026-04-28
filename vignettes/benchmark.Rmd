@@ -370,9 +370,162 @@ sweep_plots <- list(
 wrap_plots(sweep_plots, ncol = 2)
 ```
 
+## Local PCA: weighting × parameter interaction
+
+The previous sweeps held `local.weight.by = "stdev"` fixed.  Here we run
+all three weighting schemes across the same k and `local.dims` grids to check
+whether the interaction matters — i.e. whether a different weighting scheme
+performs better at certain neighbourhood sizes or truncation levels.
+
+```{r local-pca-wt-sweep}
+set.seed(42)
+
+# ── prop.var at k = 10, 20, 50 (k=30 already in lp.pv) ─────────────────────
+for (cfg in list(
+  list(k=10L, pfx="lp.k10.pv",  rname="umap.lp.k10.pv"),
+  list(k=20L, pfx="lp.k20.pv",  rname="umap.lp.k20.pv"),
+  list(k=50L, pfx="lp.k50.pv",  rname="umap.lp.k50.pv")
+)) {
+  cbmc <- RunLocalPCANeighbors(cbmc, dims = 1:30, k.param = cfg$k,
+                               local.weight.by = "prop.var",
+                               prefix = cfg$pfx, verbose = FALSE)
+  cbmc <- FindClusters(cbmc, graph.name = paste0(cfg$pfx, "_snn"),
+                       resolution = 0.8, verbose = FALSE)
+  cbmc <- RunLocalPCAUMAP(cbmc, dims = 1:30, k.param = cfg$k,
+                          local.weight.by = "prop.var",
+                          reduction.name = cfg$rname, verbose = FALSE)
+  assign(paste0("ari_lp_k", cfg$k, "_pv"),
+         adjustedRandIndex(cbmc$seurat_clusters, cbmc$protein_annotations))
+  assign(paste0("pur_lp_k", cfg$k, "_pv"),
+         knn_purity(Embeddings(cbmc, cfg$rname), cbmc$protein_annotations))
+}
+
+# ── none at k = 10, 20, 50 (k=30 already in lp.none) ───────────────────────
+for (cfg in list(
+  list(k=10L, pfx="lp.k10.none",  rname="umap.lp.k10.none"),
+  list(k=20L, pfx="lp.k20.none",  rname="umap.lp.k20.none"),
+  list(k=50L, pfx="lp.k50.none",  rname="umap.lp.k50.none")
+)) {
+  cbmc <- RunLocalPCANeighbors(cbmc, dims = 1:30, k.param = cfg$k,
+                               local.weight.by = "none",
+                               prefix = cfg$pfx, verbose = FALSE)
+  cbmc <- FindClusters(cbmc, graph.name = paste0(cfg$pfx, "_snn"),
+                       resolution = 0.8, verbose = FALSE)
+  cbmc <- RunLocalPCAUMAP(cbmc, dims = 1:30, k.param = cfg$k,
+                          local.weight.by = "none",
+                          reduction.name = cfg$rname, verbose = FALSE)
+  assign(paste0("ari_lp_k", cfg$k, "_none"),
+         adjustedRandIndex(cbmc$seurat_clusters, cbmc$protein_annotations))
+  assign(paste0("pur_lp_k", cfg$k, "_none"),
+         knn_purity(Embeddings(cbmc, cfg$rname), cbmc$protein_annotations))
+}
+
+# ── prop.var at local.dims = 5, 10, 15 (ld=30 already in lp.pv) ─────────────
+for (cfg in list(
+  list(ld=5L,  pfx="lp.ld5.pv",  rname="umap.lp.ld5.pv"),
+  list(ld=10L, pfx="lp.ld10.pv", rname="umap.lp.ld10.pv"),
+  list(ld=15L, pfx="lp.ld15.pv", rname="umap.lp.ld15.pv")
+)) {
+  cbmc <- RunLocalPCANeighbors(cbmc, dims = 1:30, k.param = 30L,
+                               local.dims = cfg$ld, local.weight.by = "prop.var",
+                               prefix = cfg$pfx, verbose = FALSE)
+  cbmc <- FindClusters(cbmc, graph.name = paste0(cfg$pfx, "_snn"),
+                       resolution = 0.8, verbose = FALSE)
+  cbmc <- RunLocalPCAUMAP(cbmc, dims = 1:30, k.param = 30L,
+                          local.dims = cfg$ld, local.weight.by = "prop.var",
+                          reduction.name = cfg$rname, verbose = FALSE)
+  assign(paste0("ari_lp_ld", cfg$ld, "_pv"),
+         adjustedRandIndex(cbmc$seurat_clusters, cbmc$protein_annotations))
+  assign(paste0("pur_lp_ld", cfg$ld, "_pv"),
+         knn_purity(Embeddings(cbmc, cfg$rname), cbmc$protein_annotations))
+}
+
+# ── none at local.dims = 5, 10, 15 (ld=30 already in lp.none) ───────────────
+for (cfg in list(
+  list(ld=5L,  pfx="lp.ld5.none",  rname="umap.lp.ld5.none"),
+  list(ld=10L, pfx="lp.ld10.none", rname="umap.lp.ld10.none"),
+  list(ld=15L, pfx="lp.ld15.none", rname="umap.lp.ld15.none")
+)) {
+  cbmc <- RunLocalPCANeighbors(cbmc, dims = 1:30, k.param = 30L,
+                               local.dims = cfg$ld, local.weight.by = "none",
+                               prefix = cfg$pfx, verbose = FALSE)
+  cbmc <- FindClusters(cbmc, graph.name = paste0(cfg$pfx, "_snn"),
+                       resolution = 0.8, verbose = FALSE)
+  cbmc <- RunLocalPCAUMAP(cbmc, dims = 1:30, k.param = 30L,
+                          local.dims = cfg$ld, local.weight.by = "none",
+                          reduction.name = cfg$rname, verbose = FALSE)
+  assign(paste0("ari_lp_ld", cfg$ld, "_none"),
+         adjustedRandIndex(cbmc$seurat_clusters, cbmc$protein_annotations))
+  assign(paste0("pur_lp_ld", cfg$ld, "_none"),
+         knn_purity(Embeddings(cbmc, cfg$rname), cbmc$protein_annotations))
+}
+```
+
+```{r local-pca-wt-heatmap, fig.height=6, fig.cap="ARI heatmaps: weighting scheme × k.param (left) and weighting scheme × local.dims (right, k=30). Labels show ARI; higher is better."}
+# ── Build grid data frames ──────────────────────────────────────────────────
+wt_k_grid <- expand.grid(
+  k      = c(10, 20, 30, 50),
+  scheme = c("stdev", "prop.var", "none"),
+  stringsAsFactors = FALSE
+)
+wt_k_grid$ARI <- c(
+  ari_lp_k10,    ari_lp_k20,    ari_lp,    ari_lp_k50,
+  ari_lp_k10_pv, ari_lp_k20_pv, ari_lp_pv, ari_lp_k50_pv,
+  ari_lp_k10_none, ari_lp_k20_none, ari_lp_none, ari_lp_k50_none
+)
+
+wt_ld_grid <- expand.grid(
+  local.dims = c(5, 10, 15, 30),
+  scheme     = c("stdev", "prop.var", "none"),
+  stringsAsFactors = FALSE
+)
+wt_ld_grid$ARI <- c(
+  ari_lp_ld5,    ari_lp_ld10,    ari_lp_ld15,    ari_lp,
+  ari_lp_ld5_pv, ari_lp_ld10_pv, ari_lp_ld15_pv, ari_lp_pv,
+  ari_lp_ld5_none, ari_lp_ld10_none, ari_lp_ld15_none, ari_lp_none
+)
+
+# ── Plot ────────────────────────────────────────────────────────────────────
+ph_k <- ggplot(wt_k_grid, aes(x = scheme, y = factor(k), fill = ARI)) +
+  geom_tile(colour = "white", linewidth = 0.8) +
+  geom_text(aes(label = sprintf("%.3f", ARI)), size = 3.5) +
+  scale_fill_distiller(palette = "RdYlGn", direction = 1,
+                       limits = range(c(wt_k_grid$ARI, wt_ld_grid$ARI))) +
+  labs(x = "local.weight.by", y = "k.param",
+       title = "k.param × weighting") +
+  theme_bw(base_size = 12)
+
+ph_ld <- ggplot(wt_ld_grid, aes(x = scheme, y = factor(local.dims), fill = ARI)) +
+  geom_tile(colour = "white", linewidth = 0.8) +
+  geom_text(aes(label = sprintf("%.3f", ARI)), size = 3.5) +
+  scale_fill_distiller(palette = "RdYlGn", direction = 1,
+                       limits = range(c(wt_k_grid$ARI, wt_ld_grid$ARI))) +
+  labs(x = "local.weight.by", y = "local.dims",
+       title = "local.dims × weighting  (k=30)") +
+  theme_bw(base_size = 12)
+
+ph_k | ph_ld
+```
+
+```{r wt-interaction-summary}
+best_combo_k  <- wt_k_grid[which.max(wt_k_grid$ARI), ]
+best_combo_ld <- wt_ld_grid[which.max(wt_ld_grid$ARI), ]
+```
+
+Across the full k × weighting grid, the highest ARI is
+`r round(best_combo_k$ARI, 3)` at `k = `r best_combo_k$k``,
+`local.weight.by = "`r best_combo_k$scheme`"`.
+
+Across the local.dims × weighting grid, the highest ARI is
+`r round(best_combo_ld$ARI, 3)` at `local.dims = `r best_combo_ld$local.dims``,
+`local.weight.by = "`r best_combo_ld$scheme`"`.
+
+If the best weighting scheme is consistent across all k values (each column in
+the heatmap ranks the same way), the scheme choice dominates.  If the best
+scheme changes with k, there is an interaction and neither parameter can be
+tuned in isolation.
 
 
-```{r results-table}
 results <- data.frame(
   Method = c(
     "standard (none)",
@@ -506,7 +659,10 @@ highest ARI (`r round(ld_aris[ld_vals == best_ld], 3)`).
   parameter for this dataset.
 
 
-combined into a distance:
+### Local PCA weighting schemes (at k=30)
+
+The following table and summary cover the four weighting variants at the
+default k=30, comparing stdev, prop.var, none, and stdev+mp.filter.
 
 | Setting | What it does |
 |---|---|
