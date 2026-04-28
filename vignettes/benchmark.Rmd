@@ -100,9 +100,9 @@ pur_sd <- knn_purity(Embeddings(cbmc, "umap.sd"), cbmc$protein_annotations)
 
 # stdev + log.scale
 cbmc <- RunWeightedNeighbors(cbmc, dims = 1:30, weight.by = "stdev",
-                             log.scale = TRUE, prefix = "wt.sd.log",
+                             log.scale = TRUE, prefix = "wt_sdlog",
                              verbose = FALSE)
-cbmc <- FindClusters(cbmc, graph.name = "wt.sd.log_snn", resolution = 0.8,
+cbmc <- FindClusters(cbmc, graph.name = "wt_sdlog_snn", resolution = 0.8,
                      verbose = FALSE)
 cbmc <- RunWeightedUMAP(cbmc, dims = 1:30, weight.by = "stdev",
                         log.scale = TRUE, reduction.name = "umap.sd.log",
@@ -134,9 +134,9 @@ pur_pv <- knn_purity(Embeddings(cbmc, "umap.pv"), cbmc$protein_annotations)
 
 # prop.var + log.scale
 cbmc <- RunWeightedNeighbors(cbmc, dims = 1:30, weight.by = "prop.var",
-                             log.scale = TRUE, prefix = "wt.pv.log",
+                             log.scale = TRUE, prefix = "wt_pvlog",
                              verbose = FALSE)
-cbmc <- FindClusters(cbmc, graph.name = "wt.pv.log_snn", resolution = 0.8,
+cbmc <- FindClusters(cbmc, graph.name = "wt_pvlog_snn", resolution = 0.8,
                      verbose = FALSE)
 cbmc <- RunWeightedUMAP(cbmc, dims = 1:30, weight.by = "prop.var",
                         log.scale = TRUE, reduction.name = "umap.pv.log",
@@ -525,7 +525,9 @@ the heatmap ranks the same way), the scheme choice dominates.  If the best
 scheme changes with k, there is an interaction and neither parameter can be
 tuned in isolation.
 
+## Results summary
 
+```{r results-table}
 results <- data.frame(
   Method = c(
     "standard (none)",

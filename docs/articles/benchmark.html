@@ -162,9 +162,9 @@ protein label. Range 0–1; higher = better.</td>
 <span></span>
 <span><span class="co"># stdev + log.scale</span></span>
 <span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunWeightedNeighbors.html">RunWeightedNeighbors</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, weight.by <span class="op">=</span> <span class="st">"stdev"</span>,</span>
-<span>                             log.scale <span class="op">=</span> <span class="cn">TRUE</span>, prefix <span class="op">=</span> <span class="st">"wt.sd.log"</span>,</span>
+<span>                             log.scale <span class="op">=</span> <span class="cn">TRUE</span>, prefix <span class="op">=</span> <span class="st">"wt_sdlog"</span>,</span>
 <span>                             verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">cbmc</span>, graph.name <span class="op">=</span> <span class="st">"wt.sd.log_snn"</span>, resolution <span class="op">=</span> <span class="fl">0.8</span>,</span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">cbmc</span>, graph.name <span class="op">=</span> <span class="st">"wt_sdlog_snn"</span>, resolution <span class="op">=</span> <span class="fl">0.8</span>,</span>
 <span>                     verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunWeightedUMAP.html">RunWeightedUMAP</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, weight.by <span class="op">=</span> <span class="st">"stdev"</span>,</span>
 <span>                        log.scale <span class="op">=</span> <span class="cn">TRUE</span>, reduction.name <span class="op">=</span> <span class="st">"umap.sd.log"</span>,</span>
@@ -196,9 +196,9 @@ protein label. Range 0–1; higher = better.</td>
 <span></span>
 <span><span class="co"># prop.var + log.scale</span></span>
 <span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunWeightedNeighbors.html">RunWeightedNeighbors</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, weight.by <span class="op">=</span> <span class="st">"prop.var"</span>,</span>
-<span>                             log.scale <span class="op">=</span> <span class="cn">TRUE</span>, prefix <span class="op">=</span> <span class="st">"wt.pv.log"</span>,</span>
+<span>                             log.scale <span class="op">=</span> <span class="cn">TRUE</span>, prefix <span class="op">=</span> <span class="st">"wt_pvlog"</span>,</span>
 <span>                             verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">cbmc</span>, graph.name <span class="op">=</span> <span class="st">"wt.pv.log_snn"</span>, resolution <span class="op">=</span> <span class="fl">0.8</span>,</span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">cbmc</span>, graph.name <span class="op">=</span> <span class="st">"wt_pvlog_snn"</span>, resolution <span class="op">=</span> <span class="fl">0.8</span>,</span>
 <span>                     verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunWeightedUMAP.html">RunWeightedUMAP</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, weight.by <span class="op">=</span> <span class="st">"prop.var"</span>,</span>
 <span>                        log.scale <span class="op">=</span> <span class="cn">TRUE</span>, reduction.name <span class="op">=</span> <span class="st">"umap.pv.log"</span>,</span>
@@ -226,24 +226,436 @@ per-neighbourhood PCA distances and stores them for consistent
 clustering and visualisation. Using the same <code>k.param</code> and
 <code>local.weight.by</code> for both the graph and the UMAP step
 ensures clustering and layout share identical distances.</p>
+<p>We test all three <code>local.weight.by</code> schemes plus
+<code>mp.filter = TRUE</code> (combined with <code>stdev</code>) to
+isolate the effect of local weighting strategy.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Weighted local PCA: build KNN/SNN graphs with stdev-weighted local distances,</span></span>
-<span><span class="co"># then cluster and visualise from the same graph.</span></span>
+<span><span class="co"># stdev (default)</span></span>
 <span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunLocalPCANeighbors.html">RunLocalPCANeighbors</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="fl">30</span>,</span>
+<span>                             local.weight.by <span class="op">=</span> <span class="st">"stdev"</span>,</span>
 <span>                             prefix <span class="op">=</span> <span class="st">"lp"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">cbmc</span>, graph.name <span class="op">=</span> <span class="st">"lp_snn"</span>, resolution <span class="op">=</span> <span class="fl">0.8</span>,</span>
 <span>                     verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunLocalPCAUMAP.html">RunLocalPCAUMAP</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="fl">30</span>,</span>
+<span>                        local.weight.by <span class="op">=</span> <span class="st">"stdev"</span>,</span>
 <span>                        reduction.name <span class="op">=</span> <span class="st">"umap.lp"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="va">ari_lp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://mclust-org.github.io/mclust/reference/adjustedRandIndex.html" class="external-link">adjustedRandIndex</a></span><span class="op">(</span><span class="va">cbmc</span><span class="op">$</span><span class="va">seurat_clusters</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span></span>
-<span><span class="va">pur_lp</span> <span class="op">&lt;-</span> <span class="fu">knn_purity</span><span class="op">(</span><span class="fu"><a href="https://satijalab.github.io/seurat-object/reference/Embeddings.html" class="external-link">Embeddings</a></span><span class="op">(</span><span class="va">cbmc</span>, <span class="st">"umap.lp"</span><span class="op">)</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">ari_lp</span>     <span class="op">&lt;-</span> <span class="fu"><a href="https://mclust-org.github.io/mclust/reference/adjustedRandIndex.html" class="external-link">adjustedRandIndex</a></span><span class="op">(</span><span class="va">cbmc</span><span class="op">$</span><span class="va">seurat_clusters</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span></span>
+<span><span class="va">pur_lp</span>     <span class="op">&lt;-</span> <span class="fu">knn_purity</span><span class="op">(</span><span class="fu"><a href="https://satijalab.github.io/seurat-object/reference/Embeddings.html" class="external-link">Embeddings</a></span><span class="op">(</span><span class="va">cbmc</span>, <span class="st">"umap.lp"</span><span class="op">)</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># prop.var (aggressive local weighting)</span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunLocalPCANeighbors.html">RunLocalPCANeighbors</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="fl">30</span>,</span>
+<span>                             local.weight.by <span class="op">=</span> <span class="st">"prop.var"</span>,</span>
+<span>                             prefix <span class="op">=</span> <span class="st">"lp.pv"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">cbmc</span>, graph.name <span class="op">=</span> <span class="st">"lp.pv_snn"</span>, resolution <span class="op">=</span> <span class="fl">0.8</span>,</span>
+<span>                     verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunLocalPCAUMAP.html">RunLocalPCAUMAP</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="fl">30</span>,</span>
+<span>                        local.weight.by <span class="op">=</span> <span class="st">"prop.var"</span>,</span>
+<span>                        reduction.name <span class="op">=</span> <span class="st">"umap.lp.pv"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">ari_lp_pv</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://mclust-org.github.io/mclust/reference/adjustedRandIndex.html" class="external-link">adjustedRandIndex</a></span><span class="op">(</span><span class="va">cbmc</span><span class="op">$</span><span class="va">seurat_clusters</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span></span>
+<span><span class="va">pur_lp_pv</span>  <span class="op">&lt;-</span> <span class="fu">knn_purity</span><span class="op">(</span><span class="fu"><a href="https://satijalab.github.io/seurat-object/reference/Embeddings.html" class="external-link">Embeddings</a></span><span class="op">(</span><span class="va">cbmc</span>, <span class="st">"umap.lp.pv"</span><span class="op">)</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># none (unweighted local PCA, isotropic)</span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunLocalPCANeighbors.html">RunLocalPCANeighbors</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="fl">30</span>,</span>
+<span>                             local.weight.by <span class="op">=</span> <span class="st">"none"</span>,</span>
+<span>                             prefix <span class="op">=</span> <span class="st">"lp.none"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">cbmc</span>, graph.name <span class="op">=</span> <span class="st">"lp.none_snn"</span>, resolution <span class="op">=</span> <span class="fl">0.8</span>,</span>
+<span>                     verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunLocalPCAUMAP.html">RunLocalPCAUMAP</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="fl">30</span>,</span>
+<span>                        local.weight.by <span class="op">=</span> <span class="st">"none"</span>,</span>
+<span>                        reduction.name <span class="op">=</span> <span class="st">"umap.lp.none"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">ari_lp_none</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://mclust-org.github.io/mclust/reference/adjustedRandIndex.html" class="external-link">adjustedRandIndex</a></span><span class="op">(</span><span class="va">cbmc</span><span class="op">$</span><span class="va">seurat_clusters</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span></span>
+<span><span class="va">pur_lp_none</span> <span class="op">&lt;-</span> <span class="fu">knn_purity</span><span class="op">(</span><span class="fu"><a href="https://satijalab.github.io/seurat-object/reference/Embeddings.html" class="external-link">Embeddings</a></span><span class="op">(</span><span class="va">cbmc</span>, <span class="st">"umap.lp.none"</span><span class="op">)</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># stdev + mp.filter (noise-PC zeroing post-weighting)</span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunLocalPCANeighbors.html">RunLocalPCANeighbors</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="fl">30</span>,</span>
+<span>                             local.weight.by <span class="op">=</span> <span class="st">"stdev"</span>, mp.filter <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>                             prefix <span class="op">=</span> <span class="st">"lp.mp"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">cbmc</span>, graph.name <span class="op">=</span> <span class="st">"lp.mp_snn"</span>, resolution <span class="op">=</span> <span class="fl">0.8</span>,</span>
+<span>                     verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunLocalPCAUMAP.html">RunLocalPCAUMAP</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="fl">30</span>,</span>
+<span>                        local.weight.by <span class="op">=</span> <span class="st">"stdev"</span>, mp.filter <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>                        reduction.name <span class="op">=</span> <span class="st">"umap.lp.mp"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">ari_lp_mp</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://mclust-org.github.io/mclust/reference/adjustedRandIndex.html" class="external-link">adjustedRandIndex</a></span><span class="op">(</span><span class="va">cbmc</span><span class="op">$</span><span class="va">seurat_clusters</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span></span>
+<span><span class="va">pur_lp_mp</span>  <span class="op">&lt;-</span> <span class="fu">knn_purity</span><span class="op">(</span><span class="fu"><a href="https://satijalab.github.io/seurat-object/reference/Embeddings.html" class="external-link">Embeddings</a></span><span class="op">(</span><span class="va">cbmc</span>, <span class="st">"umap.lp.mp"</span><span class="op">)</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="results">Results<a class="anchor" aria-label="anchor" href="#results"></a>
+<h2 id="local-pca-parameter-sweep">Local PCA: parameter sweep<a class="anchor" aria-label="anchor" href="#local-pca-parameter-sweep"></a>
 </h2>
+<p>The <code>k.param</code> and <code>local.dims</code> parameters
+control two orthogonal aspects of the local PCA metric:</p>
+<ul>
+<li>
+<strong><code>k.param</code></strong>: neighbourhood size. Smaller
+values capture finer local structure but produce noisier SVDs; larger
+values smooth out local variation and converge toward a global
+metric.</li>
+<li>
+<strong><code>local.dims</code></strong>: how many local PC
+directions to retain. Truncating to fewer directions discards the
+weakest local axes, which is an alternative (non-probabilistic) form of
+noise filtering.</li>
+</ul>
+<p>We fix <code>local.weight.by = "stdev"</code> throughout and vary
+each parameter in turn.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># ── k.param sweep (local.dims = k.param, stdev weighting) ──────────────────</span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunLocalPCANeighbors.html">RunLocalPCANeighbors</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="fl">10L</span>,</span>
+<span>                             local.weight.by <span class="op">=</span> <span class="st">"stdev"</span>,</span>
+<span>                             prefix <span class="op">=</span> <span class="st">"lp.k10"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">cbmc</span>, graph.name <span class="op">=</span> <span class="st">"lp.k10_snn"</span>,</span>
+<span>                     resolution <span class="op">=</span> <span class="fl">0.8</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunLocalPCAUMAP.html">RunLocalPCAUMAP</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="fl">10L</span>,</span>
+<span>                        local.weight.by <span class="op">=</span> <span class="st">"stdev"</span>,</span>
+<span>                        reduction.name <span class="op">=</span> <span class="st">"umap.lp.k10"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">ari_lp_k10</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://mclust-org.github.io/mclust/reference/adjustedRandIndex.html" class="external-link">adjustedRandIndex</a></span><span class="op">(</span><span class="va">cbmc</span><span class="op">$</span><span class="va">seurat_clusters</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span></span>
+<span><span class="va">pur_lp_k10</span> <span class="op">&lt;-</span> <span class="fu">knn_purity</span><span class="op">(</span><span class="fu"><a href="https://satijalab.github.io/seurat-object/reference/Embeddings.html" class="external-link">Embeddings</a></span><span class="op">(</span><span class="va">cbmc</span>, <span class="st">"umap.lp.k10"</span><span class="op">)</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunLocalPCANeighbors.html">RunLocalPCANeighbors</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="fl">20L</span>,</span>
+<span>                             local.weight.by <span class="op">=</span> <span class="st">"stdev"</span>,</span>
+<span>                             prefix <span class="op">=</span> <span class="st">"lp.k20"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">cbmc</span>, graph.name <span class="op">=</span> <span class="st">"lp.k20_snn"</span>,</span>
+<span>                     resolution <span class="op">=</span> <span class="fl">0.8</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunLocalPCAUMAP.html">RunLocalPCAUMAP</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="fl">20L</span>,</span>
+<span>                        local.weight.by <span class="op">=</span> <span class="st">"stdev"</span>,</span>
+<span>                        reduction.name <span class="op">=</span> <span class="st">"umap.lp.k20"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">ari_lp_k20</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://mclust-org.github.io/mclust/reference/adjustedRandIndex.html" class="external-link">adjustedRandIndex</a></span><span class="op">(</span><span class="va">cbmc</span><span class="op">$</span><span class="va">seurat_clusters</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span></span>
+<span><span class="va">pur_lp_k20</span> <span class="op">&lt;-</span> <span class="fu">knn_purity</span><span class="op">(</span><span class="fu"><a href="https://satijalab.github.io/seurat-object/reference/Embeddings.html" class="external-link">Embeddings</a></span><span class="op">(</span><span class="va">cbmc</span>, <span class="st">"umap.lp.k20"</span><span class="op">)</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunLocalPCANeighbors.html">RunLocalPCANeighbors</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="fl">50L</span>,</span>
+<span>                             local.weight.by <span class="op">=</span> <span class="st">"stdev"</span>,</span>
+<span>                             prefix <span class="op">=</span> <span class="st">"lp.k50"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">cbmc</span>, graph.name <span class="op">=</span> <span class="st">"lp.k50_snn"</span>,</span>
+<span>                     resolution <span class="op">=</span> <span class="fl">0.8</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunLocalPCAUMAP.html">RunLocalPCAUMAP</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="fl">50L</span>,</span>
+<span>                        local.weight.by <span class="op">=</span> <span class="st">"stdev"</span>,</span>
+<span>                        reduction.name <span class="op">=</span> <span class="st">"umap.lp.k50"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">ari_lp_k50</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://mclust-org.github.io/mclust/reference/adjustedRandIndex.html" class="external-link">adjustedRandIndex</a></span><span class="op">(</span><span class="va">cbmc</span><span class="op">$</span><span class="va">seurat_clusters</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span></span>
+<span><span class="va">pur_lp_k50</span> <span class="op">&lt;-</span> <span class="fu">knn_purity</span><span class="op">(</span><span class="fu"><a href="https://satijalab.github.io/seurat-object/reference/Embeddings.html" class="external-link">Embeddings</a></span><span class="op">(</span><span class="va">cbmc</span>, <span class="st">"umap.lp.k50"</span><span class="op">)</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># ── local.dims sweep (k.param = 30, stdev weighting) ───────────────────────</span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunLocalPCANeighbors.html">RunLocalPCANeighbors</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="fl">30L</span>,</span>
+<span>                             local.dims <span class="op">=</span> <span class="fl">5L</span>, local.weight.by <span class="op">=</span> <span class="st">"stdev"</span>,</span>
+<span>                             prefix <span class="op">=</span> <span class="st">"lp.ld5"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">cbmc</span>, graph.name <span class="op">=</span> <span class="st">"lp.ld5_snn"</span>,</span>
+<span>                     resolution <span class="op">=</span> <span class="fl">0.8</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunLocalPCAUMAP.html">RunLocalPCAUMAP</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="fl">30L</span>,</span>
+<span>                        local.dims <span class="op">=</span> <span class="fl">5L</span>, local.weight.by <span class="op">=</span> <span class="st">"stdev"</span>,</span>
+<span>                        reduction.name <span class="op">=</span> <span class="st">"umap.lp.ld5"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">ari_lp_ld5</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://mclust-org.github.io/mclust/reference/adjustedRandIndex.html" class="external-link">adjustedRandIndex</a></span><span class="op">(</span><span class="va">cbmc</span><span class="op">$</span><span class="va">seurat_clusters</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span></span>
+<span><span class="va">pur_lp_ld5</span> <span class="op">&lt;-</span> <span class="fu">knn_purity</span><span class="op">(</span><span class="fu"><a href="https://satijalab.github.io/seurat-object/reference/Embeddings.html" class="external-link">Embeddings</a></span><span class="op">(</span><span class="va">cbmc</span>, <span class="st">"umap.lp.ld5"</span><span class="op">)</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunLocalPCANeighbors.html">RunLocalPCANeighbors</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="fl">30L</span>,</span>
+<span>                             local.dims <span class="op">=</span> <span class="fl">10L</span>, local.weight.by <span class="op">=</span> <span class="st">"stdev"</span>,</span>
+<span>                             prefix <span class="op">=</span> <span class="st">"lp.ld10"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">cbmc</span>, graph.name <span class="op">=</span> <span class="st">"lp.ld10_snn"</span>,</span>
+<span>                     resolution <span class="op">=</span> <span class="fl">0.8</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunLocalPCAUMAP.html">RunLocalPCAUMAP</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="fl">30L</span>,</span>
+<span>                        local.dims <span class="op">=</span> <span class="fl">10L</span>, local.weight.by <span class="op">=</span> <span class="st">"stdev"</span>,</span>
+<span>                        reduction.name <span class="op">=</span> <span class="st">"umap.lp.ld10"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">ari_lp_ld10</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://mclust-org.github.io/mclust/reference/adjustedRandIndex.html" class="external-link">adjustedRandIndex</a></span><span class="op">(</span><span class="va">cbmc</span><span class="op">$</span><span class="va">seurat_clusters</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span></span>
+<span><span class="va">pur_lp_ld10</span> <span class="op">&lt;-</span> <span class="fu">knn_purity</span><span class="op">(</span><span class="fu"><a href="https://satijalab.github.io/seurat-object/reference/Embeddings.html" class="external-link">Embeddings</a></span><span class="op">(</span><span class="va">cbmc</span>, <span class="st">"umap.lp.ld10"</span><span class="op">)</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunLocalPCANeighbors.html">RunLocalPCANeighbors</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="fl">30L</span>,</span>
+<span>                             local.dims <span class="op">=</span> <span class="fl">15L</span>, local.weight.by <span class="op">=</span> <span class="st">"stdev"</span>,</span>
+<span>                             prefix <span class="op">=</span> <span class="st">"lp.ld15"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">cbmc</span>, graph.name <span class="op">=</span> <span class="st">"lp.ld15_snn"</span>,</span>
+<span>                     resolution <span class="op">=</span> <span class="fl">0.8</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunLocalPCAUMAP.html">RunLocalPCAUMAP</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="fl">30L</span>,</span>
+<span>                        local.dims <span class="op">=</span> <span class="fl">15L</span>, local.weight.by <span class="op">=</span> <span class="st">"stdev"</span>,</span>
+<span>                        reduction.name <span class="op">=</span> <span class="st">"umap.lp.ld15"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">ari_lp_ld15</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://mclust-org.github.io/mclust/reference/adjustedRandIndex.html" class="external-link">adjustedRandIndex</a></span><span class="op">(</span><span class="va">cbmc</span><span class="op">$</span><span class="va">seurat_clusters</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span></span>
+<span><span class="va">pur_lp_ld15</span> <span class="op">&lt;-</span> <span class="fu">knn_purity</span><span class="op">(</span><span class="fu"><a href="https://satijalab.github.io/seurat-object/reference/Embeddings.html" class="external-link">Embeddings</a></span><span class="op">(</span><span class="va">cbmc</span>, <span class="st">"umap.lp.ld15"</span><span class="op">)</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">sweep_results</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  Setting <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>    <span class="st">"k=10  (local.dims=10)"</span>,</span>
+<span>    <span class="st">"k=20  (local.dims=20)"</span>,</span>
+<span>    <span class="st">"k=30  (local.dims=30, baseline)"</span>,</span>
+<span>    <span class="st">"k=50  (local.dims=50)"</span>,</span>
+<span>    <span class="st">"k=30, local.dims=5"</span>,</span>
+<span>    <span class="st">"k=30, local.dims=10"</span>,</span>
+<span>    <span class="st">"k=30, local.dims=15"</span>,</span>
+<span>    <span class="st">"k=30, local.dims=30 (baseline)"</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  Varied     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"k.param"</span>, <span class="fl">4</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"local.dims"</span>, <span class="fl">4</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  ARI        <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">ari_lp_k10</span>, <span class="va">ari_lp_k20</span>, <span class="va">ari_lp</span>, <span class="va">ari_lp_k50</span>,</span>
+<span>                 <span class="va">ari_lp_ld5</span>, <span class="va">ari_lp_ld10</span>, <span class="va">ari_lp_ld15</span>, <span class="va">ari_lp</span><span class="op">)</span>,</span>
+<span>  kNN_purity <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">pur_lp_k10</span>, <span class="va">pur_lp_k20</span>, <span class="va">pur_lp</span>, <span class="va">pur_lp_k50</span>,</span>
+<span>                 <span class="va">pur_lp_ld5</span>, <span class="va">pur_lp_ld10</span>, <span class="va">pur_lp_ld15</span>, <span class="va">pur_lp</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">sweep_results</span>, digits <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>  caption <span class="op">=</span> <span class="st">"Local PCA parameter sweep (local.weight.by = 'stdev' throughout)."</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<caption>Local PCA parameter sweep (local.weight.by = ‘stdev’
+throughout).</caption>
+<thead><tr class="header">
+<th align="left">Setting</th>
+<th align="left">Varied</th>
+<th align="right">ARI</th>
+<th align="right">kNN_purity</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">k=10 (local.dims=10)</td>
+<td align="left">k.param</td>
+<td align="right">0.434</td>
+<td align="right">0.937</td>
+</tr>
+<tr class="even">
+<td align="left">k=20 (local.dims=20)</td>
+<td align="left">k.param</td>
+<td align="right">0.544</td>
+<td align="right">0.938</td>
+</tr>
+<tr class="odd">
+<td align="left">k=30 (local.dims=30, baseline)</td>
+<td align="left">k.param</td>
+<td align="right">0.554</td>
+<td align="right">0.939</td>
+</tr>
+<tr class="even">
+<td align="left">k=50 (local.dims=50)</td>
+<td align="left">k.param</td>
+<td align="right">0.558</td>
+<td align="right">0.938</td>
+</tr>
+<tr class="odd">
+<td align="left">k=30, local.dims=5</td>
+<td align="left">local.dims</td>
+<td align="right">0.554</td>
+<td align="right">0.939</td>
+</tr>
+<tr class="even">
+<td align="left">k=30, local.dims=10</td>
+<td align="left">local.dims</td>
+<td align="right">0.554</td>
+<td align="right">0.939</td>
+</tr>
+<tr class="odd">
+<td align="left">k=30, local.dims=15</td>
+<td align="left">local.dims</td>
+<td align="right">0.554</td>
+<td align="right">0.939</td>
+</tr>
+<tr class="even">
+<td align="left">k=30, local.dims=30 (baseline)</td>
+<td align="left">local.dims</td>
+<td align="right">0.554</td>
+<td align="right">0.939</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">sweep_long</span> <span class="op">&lt;-</span> <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_longer.html" class="external-link">pivot_longer</a></span><span class="op">(</span><span class="va">sweep_results</span>, cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ARI"</span>, <span class="st">"kNN_purity"</span><span class="op">)</span>,</span>
+<span>                                  names_to <span class="op">=</span> <span class="st">"Metric"</span>, values_to <span class="op">=</span> <span class="st">"Score"</span><span class="op">)</span></span>
+<span><span class="va">sweep_long</span><span class="op">$</span><span class="va">Setting</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">sweep_long</span><span class="op">$</span><span class="va">Setting</span>, levels <span class="op">=</span> <span class="va">sweep_results</span><span class="op">$</span><span class="va">Setting</span><span class="op">)</span></span>
+<span><span class="va">sweep_long</span><span class="op">$</span><span class="va">Varied</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">sweep_long</span><span class="op">$</span><span class="va">Varied</span>,  levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"k.param"</span>, <span class="st">"local.dims"</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">sweep_long</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">Setting</span>, y <span class="op">=</span> <span class="va">Score</span>, fill <span class="op">=</span> <span class="va">Varied</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_bar.html" class="external-link">geom_col</a></span><span class="op">(</span>show.legend <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_hline</a></span><span class="op">(</span>data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>    Metric <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ARI"</span>, <span class="st">"kNN_purity"</span><span class="op">)</span>, Score <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">ari_std</span>, <span class="va">pur_std</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>yintercept <span class="op">=</span> <span class="va">Score</span><span class="op">)</span>, linetype <span class="op">=</span> <span class="st">"dashed"</span>, colour <span class="op">=</span> <span class="st">"grey40"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">Metric</span>, scales <span class="op">=</span> <span class="st">"free_y"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_fill_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"k.param"</span> <span class="op">=</span> <span class="st">"#4393C3"</span>, <span class="st">"local.dims"</span> <span class="op">=</span> <span class="st">"#D6604D"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_flip.html" class="external-link">coord_flip</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="cn">NULL</span>, y <span class="op">=</span> <span class="cn">NULL</span>, fill <span class="op">=</span> <span class="st">"Parameter varied"</span>,</span>
+<span>       title <span class="op">=</span> <span class="st">"Local PCA parameter sweep (stdev weighting)"</span>,</span>
+<span>       subtitle <span class="op">=</span> <span class="st">"Dashed line = standard UMAP baseline"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span>base_size <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span></code></pre></div>
+<div class="figure">
+<img src="benchmark_files/figure-html/local-pca-sweep-plot-1.png" class="r-plt" alt="Local PCA parameter sweep. Dashed line = standard UMAP ARI baseline." width="1500"><p class="caption">
+Local PCA parameter sweep. Dashed line = standard UMAP ARI baseline.
+</p>
+</div>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://satijalab.github.io/seurat-object/reference/Idents.html" class="external-link">Idents</a></span><span class="op">(</span><span class="va">cbmc</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"protein_annotations"</span></span>
+<span><span class="va">sweep_plots</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">cbmc</span>, reduction <span class="op">=</span> <span class="st">"umap.lp.k10"</span>,  label <span class="op">=</span> <span class="cn">TRUE</span>, repel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"k=10  ARI=%.3f"</span>,  <span class="va">ari_lp_k10</span><span class="op">)</span><span class="op">)</span>  <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">cbmc</span>, reduction <span class="op">=</span> <span class="st">"umap.lp.k20"</span>,  label <span class="op">=</span> <span class="cn">TRUE</span>, repel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"k=20  ARI=%.3f"</span>,  <span class="va">ari_lp_k20</span><span class="op">)</span><span class="op">)</span>  <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">cbmc</span>, reduction <span class="op">=</span> <span class="st">"umap.lp"</span>,      label <span class="op">=</span> <span class="cn">TRUE</span>, repel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"k=30 (baseline)  ARI=%.3f"</span>, <span class="va">ari_lp</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">cbmc</span>, reduction <span class="op">=</span> <span class="st">"umap.lp.k50"</span>,  label <span class="op">=</span> <span class="cn">TRUE</span>, repel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"k=50  ARI=%.3f"</span>,  <span class="va">ari_lp_k50</span><span class="op">)</span><span class="op">)</span>  <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">cbmc</span>, reduction <span class="op">=</span> <span class="st">"umap.lp.ld5"</span>,  label <span class="op">=</span> <span class="cn">TRUE</span>, repel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"local.dims=5  ARI=%.3f"</span>,  <span class="va">ari_lp_ld5</span><span class="op">)</span><span class="op">)</span>  <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">cbmc</span>, reduction <span class="op">=</span> <span class="st">"umap.lp.ld10"</span>, label <span class="op">=</span> <span class="cn">TRUE</span>, repel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"local.dims=10  ARI=%.3f"</span>, <span class="va">ari_lp_ld10</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">cbmc</span>, reduction <span class="op">=</span> <span class="st">"umap.lp.ld15"</span>, label <span class="op">=</span> <span class="cn">TRUE</span>, repel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"local.dims=15  ARI=%.3f"</span>, <span class="va">ari_lp_ld15</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">cbmc</span>, reduction <span class="op">=</span> <span class="st">"umap.lp"</span>,      label <span class="op">=</span> <span class="cn">TRUE</span>, repel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"local.dims=30 (baseline)  ARI=%.3f"</span>, <span class="va">ari_lp</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/patchwork/man/wrap_plots.html" class="external-link">wrap_plots</a></span><span class="op">(</span><span class="va">sweep_plots</span>, ncol <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
+<div class="figure">
+<img src="benchmark_files/figure-html/local-pca-sweep-umaps-1.png" class="r-plt" alt="k.param sweep (top, stdev weighting) and local.dims sweep (bottom, k=30, stdev weighting)." width="1500"><p class="caption">
+k.param sweep (top, stdev weighting) and local.dims sweep (bottom, k=30,
+stdev weighting).
+</p>
+</div>
+</div>
+<div class="section level2">
+<h2 id="local-pca-weighting-parameter-interaction">Local PCA: weighting × parameter interaction<a class="anchor" aria-label="anchor" href="#local-pca-weighting-parameter-interaction"></a>
+</h2>
+<p>The previous sweeps held <code>local.weight.by = "stdev"</code>
+fixed. Here we run all three weighting schemes across the same k and
+<code>local.dims</code> grids to check whether the interaction matters —
+i.e. whether a different weighting scheme performs better at certain
+neighbourhood sizes or truncation levels.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># ── prop.var at k = 10, 20, 50 (k=30 already in lp.pv) ─────────────────────</span></span>
+<span><span class="kw">for</span> <span class="op">(</span><span class="va">cfg</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>k<span class="op">=</span><span class="fl">10L</span>, pfx<span class="op">=</span><span class="st">"lp.k10.pv"</span>,  rname<span class="op">=</span><span class="st">"umap.lp.k10.pv"</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>k<span class="op">=</span><span class="fl">20L</span>, pfx<span class="op">=</span><span class="st">"lp.k20.pv"</span>,  rname<span class="op">=</span><span class="st">"umap.lp.k20.pv"</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>k<span class="op">=</span><span class="fl">50L</span>, pfx<span class="op">=</span><span class="st">"lp.k50.pv"</span>,  rname<span class="op">=</span><span class="st">"umap.lp.k50.pv"</span><span class="op">)</span></span>
+<span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunLocalPCANeighbors.html">RunLocalPCANeighbors</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="va">cfg</span><span class="op">$</span><span class="va">k</span>,</span>
+<span>                               local.weight.by <span class="op">=</span> <span class="st">"prop.var"</span>,</span>
+<span>                               prefix <span class="op">=</span> <span class="va">cfg</span><span class="op">$</span><span class="va">pfx</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span>  <span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">cbmc</span>, graph.name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">cfg</span><span class="op">$</span><span class="va">pfx</span>, <span class="st">"_snn"</span><span class="op">)</span>,</span>
+<span>                       resolution <span class="op">=</span> <span class="fl">0.8</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span>  <span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunLocalPCAUMAP.html">RunLocalPCAUMAP</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="va">cfg</span><span class="op">$</span><span class="va">k</span>,</span>
+<span>                          local.weight.by <span class="op">=</span> <span class="st">"prop.var"</span>,</span>
+<span>                          reduction.name <span class="op">=</span> <span class="va">cfg</span><span class="op">$</span><span class="va">rname</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/assign.html" class="external-link">assign</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"ari_lp_k"</span>, <span class="va">cfg</span><span class="op">$</span><span class="va">k</span>, <span class="st">"_pv"</span><span class="op">)</span>,</span>
+<span>         <span class="fu"><a href="https://mclust-org.github.io/mclust/reference/adjustedRandIndex.html" class="external-link">adjustedRandIndex</a></span><span class="op">(</span><span class="va">cbmc</span><span class="op">$</span><span class="va">seurat_clusters</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/assign.html" class="external-link">assign</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"pur_lp_k"</span>, <span class="va">cfg</span><span class="op">$</span><span class="va">k</span>, <span class="st">"_pv"</span><span class="op">)</span>,</span>
+<span>         <span class="fu">knn_purity</span><span class="op">(</span><span class="fu"><a href="https://satijalab.github.io/seurat-object/reference/Embeddings.html" class="external-link">Embeddings</a></span><span class="op">(</span><span class="va">cbmc</span>, <span class="va">cfg</span><span class="op">$</span><span class="va">rname</span><span class="op">)</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="co"># ── none at k = 10, 20, 50 (k=30 already in lp.none) ───────────────────────</span></span>
+<span><span class="kw">for</span> <span class="op">(</span><span class="va">cfg</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>k<span class="op">=</span><span class="fl">10L</span>, pfx<span class="op">=</span><span class="st">"lp.k10.none"</span>,  rname<span class="op">=</span><span class="st">"umap.lp.k10.none"</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>k<span class="op">=</span><span class="fl">20L</span>, pfx<span class="op">=</span><span class="st">"lp.k20.none"</span>,  rname<span class="op">=</span><span class="st">"umap.lp.k20.none"</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>k<span class="op">=</span><span class="fl">50L</span>, pfx<span class="op">=</span><span class="st">"lp.k50.none"</span>,  rname<span class="op">=</span><span class="st">"umap.lp.k50.none"</span><span class="op">)</span></span>
+<span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunLocalPCANeighbors.html">RunLocalPCANeighbors</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="va">cfg</span><span class="op">$</span><span class="va">k</span>,</span>
+<span>                               local.weight.by <span class="op">=</span> <span class="st">"none"</span>,</span>
+<span>                               prefix <span class="op">=</span> <span class="va">cfg</span><span class="op">$</span><span class="va">pfx</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span>  <span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">cbmc</span>, graph.name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">cfg</span><span class="op">$</span><span class="va">pfx</span>, <span class="st">"_snn"</span><span class="op">)</span>,</span>
+<span>                       resolution <span class="op">=</span> <span class="fl">0.8</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span>  <span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunLocalPCAUMAP.html">RunLocalPCAUMAP</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="va">cfg</span><span class="op">$</span><span class="va">k</span>,</span>
+<span>                          local.weight.by <span class="op">=</span> <span class="st">"none"</span>,</span>
+<span>                          reduction.name <span class="op">=</span> <span class="va">cfg</span><span class="op">$</span><span class="va">rname</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/assign.html" class="external-link">assign</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"ari_lp_k"</span>, <span class="va">cfg</span><span class="op">$</span><span class="va">k</span>, <span class="st">"_none"</span><span class="op">)</span>,</span>
+<span>         <span class="fu"><a href="https://mclust-org.github.io/mclust/reference/adjustedRandIndex.html" class="external-link">adjustedRandIndex</a></span><span class="op">(</span><span class="va">cbmc</span><span class="op">$</span><span class="va">seurat_clusters</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/assign.html" class="external-link">assign</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"pur_lp_k"</span>, <span class="va">cfg</span><span class="op">$</span><span class="va">k</span>, <span class="st">"_none"</span><span class="op">)</span>,</span>
+<span>         <span class="fu">knn_purity</span><span class="op">(</span><span class="fu"><a href="https://satijalab.github.io/seurat-object/reference/Embeddings.html" class="external-link">Embeddings</a></span><span class="op">(</span><span class="va">cbmc</span>, <span class="va">cfg</span><span class="op">$</span><span class="va">rname</span><span class="op">)</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="co"># ── prop.var at local.dims = 5, 10, 15 (ld=30 already in lp.pv) ─────────────</span></span>
+<span><span class="kw">for</span> <span class="op">(</span><span class="va">cfg</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>ld<span class="op">=</span><span class="fl">5L</span>,  pfx<span class="op">=</span><span class="st">"lp.ld5.pv"</span>,  rname<span class="op">=</span><span class="st">"umap.lp.ld5.pv"</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>ld<span class="op">=</span><span class="fl">10L</span>, pfx<span class="op">=</span><span class="st">"lp.ld10.pv"</span>, rname<span class="op">=</span><span class="st">"umap.lp.ld10.pv"</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>ld<span class="op">=</span><span class="fl">15L</span>, pfx<span class="op">=</span><span class="st">"lp.ld15.pv"</span>, rname<span class="op">=</span><span class="st">"umap.lp.ld15.pv"</span><span class="op">)</span></span>
+<span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunLocalPCANeighbors.html">RunLocalPCANeighbors</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="fl">30L</span>,</span>
+<span>                               local.dims <span class="op">=</span> <span class="va">cfg</span><span class="op">$</span><span class="va">ld</span>, local.weight.by <span class="op">=</span> <span class="st">"prop.var"</span>,</span>
+<span>                               prefix <span class="op">=</span> <span class="va">cfg</span><span class="op">$</span><span class="va">pfx</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span>  <span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">cbmc</span>, graph.name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">cfg</span><span class="op">$</span><span class="va">pfx</span>, <span class="st">"_snn"</span><span class="op">)</span>,</span>
+<span>                       resolution <span class="op">=</span> <span class="fl">0.8</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span>  <span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunLocalPCAUMAP.html">RunLocalPCAUMAP</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="fl">30L</span>,</span>
+<span>                          local.dims <span class="op">=</span> <span class="va">cfg</span><span class="op">$</span><span class="va">ld</span>, local.weight.by <span class="op">=</span> <span class="st">"prop.var"</span>,</span>
+<span>                          reduction.name <span class="op">=</span> <span class="va">cfg</span><span class="op">$</span><span class="va">rname</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/assign.html" class="external-link">assign</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"ari_lp_ld"</span>, <span class="va">cfg</span><span class="op">$</span><span class="va">ld</span>, <span class="st">"_pv"</span><span class="op">)</span>,</span>
+<span>         <span class="fu"><a href="https://mclust-org.github.io/mclust/reference/adjustedRandIndex.html" class="external-link">adjustedRandIndex</a></span><span class="op">(</span><span class="va">cbmc</span><span class="op">$</span><span class="va">seurat_clusters</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/assign.html" class="external-link">assign</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"pur_lp_ld"</span>, <span class="va">cfg</span><span class="op">$</span><span class="va">ld</span>, <span class="st">"_pv"</span><span class="op">)</span>,</span>
+<span>         <span class="fu">knn_purity</span><span class="op">(</span><span class="fu"><a href="https://satijalab.github.io/seurat-object/reference/Embeddings.html" class="external-link">Embeddings</a></span><span class="op">(</span><span class="va">cbmc</span>, <span class="va">cfg</span><span class="op">$</span><span class="va">rname</span><span class="op">)</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="co"># ── none at local.dims = 5, 10, 15 (ld=30 already in lp.none) ───────────────</span></span>
+<span><span class="kw">for</span> <span class="op">(</span><span class="va">cfg</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>ld<span class="op">=</span><span class="fl">5L</span>,  pfx<span class="op">=</span><span class="st">"lp.ld5.none"</span>,  rname<span class="op">=</span><span class="st">"umap.lp.ld5.none"</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>ld<span class="op">=</span><span class="fl">10L</span>, pfx<span class="op">=</span><span class="st">"lp.ld10.none"</span>, rname<span class="op">=</span><span class="st">"umap.lp.ld10.none"</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>ld<span class="op">=</span><span class="fl">15L</span>, pfx<span class="op">=</span><span class="st">"lp.ld15.none"</span>, rname<span class="op">=</span><span class="st">"umap.lp.ld15.none"</span><span class="op">)</span></span>
+<span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunLocalPCANeighbors.html">RunLocalPCANeighbors</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="fl">30L</span>,</span>
+<span>                               local.dims <span class="op">=</span> <span class="va">cfg</span><span class="op">$</span><span class="va">ld</span>, local.weight.by <span class="op">=</span> <span class="st">"none"</span>,</span>
+<span>                               prefix <span class="op">=</span> <span class="va">cfg</span><span class="op">$</span><span class="va">pfx</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span>  <span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">cbmc</span>, graph.name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">cfg</span><span class="op">$</span><span class="va">pfx</span>, <span class="st">"_snn"</span><span class="op">)</span>,</span>
+<span>                       resolution <span class="op">=</span> <span class="fl">0.8</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span>  <span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunLocalPCAUMAP.html">RunLocalPCAUMAP</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="fl">30L</span>,</span>
+<span>                          local.dims <span class="op">=</span> <span class="va">cfg</span><span class="op">$</span><span class="va">ld</span>, local.weight.by <span class="op">=</span> <span class="st">"none"</span>,</span>
+<span>                          reduction.name <span class="op">=</span> <span class="va">cfg</span><span class="op">$</span><span class="va">rname</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/assign.html" class="external-link">assign</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"ari_lp_ld"</span>, <span class="va">cfg</span><span class="op">$</span><span class="va">ld</span>, <span class="st">"_none"</span><span class="op">)</span>,</span>
+<span>         <span class="fu"><a href="https://mclust-org.github.io/mclust/reference/adjustedRandIndex.html" class="external-link">adjustedRandIndex</a></span><span class="op">(</span><span class="va">cbmc</span><span class="op">$</span><span class="va">seurat_clusters</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/assign.html" class="external-link">assign</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"pur_lp_ld"</span>, <span class="va">cfg</span><span class="op">$</span><span class="va">ld</span>, <span class="st">"_none"</span><span class="op">)</span>,</span>
+<span>         <span class="fu">knn_purity</span><span class="op">(</span><span class="fu"><a href="https://satijalab.github.io/seurat-object/reference/Embeddings.html" class="external-link">Embeddings</a></span><span class="op">(</span><span class="va">cbmc</span>, <span class="va">cfg</span><span class="op">$</span><span class="va">rname</span><span class="op">)</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># ── Build grid data frames ──────────────────────────────────────────────────</span></span>
+<span><span class="va">wt_k_grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></span><span class="op">(</span></span>
+<span>  k      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">20</span>, <span class="fl">30</span>, <span class="fl">50</span><span class="op">)</span>,</span>
+<span>  scheme <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"stdev"</span>, <span class="st">"prop.var"</span>, <span class="st">"none"</span><span class="op">)</span>,</span>
+<span>  stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">wt_k_grid</span><span class="op">$</span><span class="va">ARI</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  <span class="va">ari_lp_k10</span>,    <span class="va">ari_lp_k20</span>,    <span class="va">ari_lp</span>,    <span class="va">ari_lp_k50</span>,</span>
+<span>  <span class="va">ari_lp_k10_pv</span>, <span class="va">ari_lp_k20_pv</span>, <span class="va">ari_lp_pv</span>, <span class="va">ari_lp_k50_pv</span>,</span>
+<span>  <span class="va">ari_lp_k10_none</span>, <span class="va">ari_lp_k20_none</span>, <span class="va">ari_lp_none</span>, <span class="va">ari_lp_k50_none</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">wt_ld_grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></span><span class="op">(</span></span>
+<span>  local.dims <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">10</span>, <span class="fl">15</span>, <span class="fl">30</span><span class="op">)</span>,</span>
+<span>  scheme     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"stdev"</span>, <span class="st">"prop.var"</span>, <span class="st">"none"</span><span class="op">)</span>,</span>
+<span>  stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">wt_ld_grid</span><span class="op">$</span><span class="va">ARI</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  <span class="va">ari_lp_ld5</span>,    <span class="va">ari_lp_ld10</span>,    <span class="va">ari_lp_ld15</span>,    <span class="va">ari_lp</span>,</span>
+<span>  <span class="va">ari_lp_ld5_pv</span>, <span class="va">ari_lp_ld10_pv</span>, <span class="va">ari_lp_ld15_pv</span>, <span class="va">ari_lp_pv</span>,</span>
+<span>  <span class="va">ari_lp_ld5_none</span>, <span class="va">ari_lp_ld10_none</span>, <span class="va">ari_lp_ld15_none</span>, <span class="va">ari_lp_none</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># ── Plot ────────────────────────────────────────────────────────────────────</span></span>
+<span><span class="va">ph_k</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">wt_k_grid</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">scheme</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">k</span><span class="op">)</span>, fill <span class="op">=</span> <span class="va">ARI</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_tile</a></span><span class="op">(</span>colour <span class="op">=</span> <span class="st">"white"</span>, linewidth <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_text.html" class="external-link">geom_text</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>label <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"%.3f"</span>, <span class="va">ARI</span><span class="op">)</span><span class="op">)</span>, size <span class="op">=</span> <span class="fl">3.5</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_brewer.html" class="external-link">scale_fill_distiller</a></span><span class="op">(</span>palette <span class="op">=</span> <span class="st">"RdYlGn"</span>, direction <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>                       limits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">wt_k_grid</span><span class="op">$</span><span class="va">ARI</span>, <span class="va">wt_ld_grid</span><span class="op">$</span><span class="va">ARI</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"local.weight.by"</span>, y <span class="op">=</span> <span class="st">"k.param"</span>,</span>
+<span>       title <span class="op">=</span> <span class="st">"k.param × weighting"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span>base_size <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">ph_ld</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">wt_ld_grid</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">scheme</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">local.dims</span><span class="op">)</span>, fill <span class="op">=</span> <span class="va">ARI</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_tile</a></span><span class="op">(</span>colour <span class="op">=</span> <span class="st">"white"</span>, linewidth <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_text.html" class="external-link">geom_text</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>label <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"%.3f"</span>, <span class="va">ARI</span><span class="op">)</span><span class="op">)</span>, size <span class="op">=</span> <span class="fl">3.5</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_brewer.html" class="external-link">scale_fill_distiller</a></span><span class="op">(</span>palette <span class="op">=</span> <span class="st">"RdYlGn"</span>, direction <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>                       limits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">wt_k_grid</span><span class="op">$</span><span class="va">ARI</span>, <span class="va">wt_ld_grid</span><span class="op">$</span><span class="va">ARI</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"local.weight.by"</span>, y <span class="op">=</span> <span class="st">"local.dims"</span>,</span>
+<span>       title <span class="op">=</span> <span class="st">"local.dims × weighting  (k=30)"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span>base_size <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">ph_k</span> <span class="op">|</span> <span class="va">ph_ld</span></span></code></pre></div>
+<div class="figure">
+<img src="benchmark_files/figure-html/local-pca-wt-heatmap-1.png" class="r-plt" alt="ARI heatmaps: weighting scheme × k.param (left) and weighting scheme × local.dims (right, k=30). Labels show ARI; higher is better." width="1500"><p class="caption">
+ARI heatmaps: weighting scheme × k.param (left) and weighting scheme ×
+local.dims (right, k=30). Labels show ARI; higher is better.
+</p>
+</div>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">best_combo_k</span>  <span class="op">&lt;-</span> <span class="va">wt_k_grid</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.min.html" class="external-link">which.max</a></span><span class="op">(</span><span class="va">wt_k_grid</span><span class="op">$</span><span class="va">ARI</span><span class="op">)</span>, <span class="op">]</span></span>
+<span><span class="va">best_combo_ld</span> <span class="op">&lt;-</span> <span class="va">wt_ld_grid</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.min.html" class="external-link">which.max</a></span><span class="op">(</span><span class="va">wt_ld_grid</span><span class="op">$</span><span class="va">ARI</span><span class="op">)</span>, <span class="op">]</span></span></code></pre></div>
+<p>Across the full k × weighting grid, the highest ARI is 0.558 at
+<code>k = 50</code>, <code>local.weight.by = "stdev"</code>.</p>
+<p>Across the local.dims × weighting grid, the highest ARI is 0.554 at
+<code>local.dims = 5</code>, <code>local.weight.by = "stdev"</code>.</p>
+<p>If the best weighting scheme is consistent across all k values (each
+column in the heatmap ranks the same way), the scheme choice dominates.
+If the best scheme changes with k, there is an interaction and neither
+parameter can be tuned in isolation.</p>
+</div>
+<div class="section level2">
+<h2 id="results-summary">Results summary<a class="anchor" aria-label="anchor" href="#results-summary"></a>
+</h2>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  Method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
 <span>    <span class="st">"standard (none)"</span>,</span>
@@ -253,12 +665,15 @@ ensures clustering and layout share identical distances.</p>
 <span>    <span class="st">"prop.var  wf=1"</span>,</span>
 <span>    <span class="st">"prop.var + log.scale"</span>,</span>
 <span>    <span class="st">"stdev + mp.filter"</span>,</span>
-<span>    <span class="st">"local PCA UMAP (stdev)"</span></span>
+<span>    <span class="st">"local PCA (stdev)"</span>,</span>
+<span>    <span class="st">"local PCA (prop.var)"</span>,</span>
+<span>    <span class="st">"local PCA (none)"</span>,</span>
+<span>    <span class="st">"local PCA (stdev + mp.filter)"</span></span>
 <span>  <span class="op">)</span>,</span>
 <span>  ARI       <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">ari_std</span>, <span class="va">ari_sd</span>, <span class="va">ari_sd_log</span>, <span class="va">ari_pv05</span>, <span class="va">ari_pv</span>, <span class="va">ari_pv_log</span>,</span>
-<span>                <span class="va">ari_mp</span>, <span class="va">ari_lp</span><span class="op">)</span>,</span>
+<span>                <span class="va">ari_mp</span>, <span class="va">ari_lp</span>, <span class="va">ari_lp_pv</span>, <span class="va">ari_lp_none</span>, <span class="va">ari_lp_mp</span><span class="op">)</span>,</span>
 <span>  kNN_purity <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">pur_std</span>, <span class="va">pur_sd</span>, <span class="va">pur_sd_log</span>, <span class="va">pur_pv05</span>, <span class="va">pur_pv</span>, <span class="va">pur_pv_log</span>,</span>
-<span>                 <span class="va">pur_mp</span>, <span class="va">pur_lp</span><span class="op">)</span></span>
+<span>                 <span class="va">pur_mp</span>, <span class="va">pur_lp</span>, <span class="va">pur_lp_pv</span>, <span class="va">pur_lp_none</span>, <span class="va">pur_lp_mp</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">results</span>, digits <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>  caption <span class="op">=</span> <span class="st">"Clustering quality vs protein labels on cbmc CITE-seq (n ≈ 7,699 cells)."</span><span class="op">)</span></span></code></pre></div>
@@ -307,13 +722,28 @@ ensures clustering and layout share identical distances.</p>
 <td align="right">0.912</td>
 </tr>
 <tr class="even">
-<td align="left">local PCA UMAP (stdev)</td>
+<td align="left">local PCA (stdev)</td>
+<td align="right">0.554</td>
+<td align="right">0.939</td>
+</tr>
+<tr class="odd">
+<td align="left">local PCA (prop.var)</td>
+<td align="right">0.554</td>
+<td align="right">0.937</td>
+</tr>
+<tr class="even">
+<td align="left">local PCA (none)</td>
+<td align="right">0.554</td>
+<td align="right">0.935</td>
+</tr>
+<tr class="odd">
+<td align="left">local PCA (stdev + mp.filter)</td>
 <td align="right">0.554</td>
 <td align="right">0.939</td>
 </tr>
 </tbody>
 </table>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyr.tidyverse.org" class="external-link">tidyr</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">res_long</span> <span class="op">&lt;-</span> <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_longer.html" class="external-link">pivot_longer</a></span><span class="op">(</span><span class="va">results</span>, cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ARI"</span>, <span class="st">"kNN_purity"</span><span class="op">)</span>,</span>
@@ -338,16 +768,16 @@ ensures clustering and layout share identical distances.</p>
 <span>       subtitle <span class="op">=</span> <span class="st">"Dashed line = standard UMAP baseline"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span>base_size <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span></code></pre></div>
 <div class="figure">
-<img src="benchmark_files/figure-html/results-plot-1.png" class="r-plt" alt="ARI and k-NN purity for each method. Dashed line = standard UMAP baseline. ARI is not shown for local PCA UMAP (embedding-only method)." width="1500"><p class="caption">
+<img src="benchmark_files/figure-html/results-plot-1.png" class="r-plt" alt="ARI and k-NN purity for each method. Dashed line = standard UMAP baseline." width="1500"><p class="caption">
 ARI and k-NN purity for each method. Dashed line = standard UMAP
-baseline. ARI is not shown for local PCA UMAP (embedding-only method).
+baseline.
 </p>
 </div>
 </div>
 <div class="section level2">
 <h2 id="umap-layouts-coloured-by-protein-label">UMAP layouts coloured by protein label<a class="anchor" aria-label="anchor" href="#umap-layouts-coloured-by-protein-label"></a>
 </h2>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://satijalab.github.io/seurat-object/reference/Idents.html" class="external-link">Idents</a></span><span class="op">(</span><span class="va">cbmc</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"protein_annotations"</span></span>
 <span></span>
 <span><span class="va">plots</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
@@ -366,10 +796,16 @@ baseline. ARI is not shown for local PCA UMAP (embedding-only method).
 <span>  <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">cbmc</span>, reduction <span class="op">=</span> <span class="st">"umap.mp"</span>,    label <span class="op">=</span> <span class="cn">TRUE</span>, repel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"stdev+mp.filter  ARI=%.3f"</span>, <span class="va">ari_mp</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">cbmc</span>, reduction <span class="op">=</span> <span class="st">"umap.lp"</span>,    label <span class="op">=</span> <span class="cn">TRUE</span>, repel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
-<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"local PCA (stdev)  ARI=%.3f"</span>, <span class="va">ari_lp</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"local PCA stdev  ARI=%.3f"</span>, <span class="va">ari_lp</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">cbmc</span>, reduction <span class="op">=</span> <span class="st">"umap.lp.pv"</span>, label <span class="op">=</span> <span class="cn">TRUE</span>, repel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"local PCA prop.var  ARI=%.3f"</span>, <span class="va">ari_lp_pv</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">cbmc</span>, reduction <span class="op">=</span> <span class="st">"umap.lp.none"</span>, label <span class="op">=</span> <span class="cn">TRUE</span>, repel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"local PCA none  ARI=%.3f"</span>, <span class="va">ari_lp_none</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">cbmc</span>, reduction <span class="op">=</span> <span class="st">"umap.lp.mp"</span>, label <span class="op">=</span> <span class="cn">TRUE</span>, repel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"local PCA stdev+mp.filter  ARI=%.3f"</span>, <span class="va">ari_lp_mp</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://patchwork.data-imaginist.com/reference/wrap_plots.html" class="external-link">wrap_plots</a></span><span class="op">(</span><span class="va">plots</span>, ncol <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/pkg/patchwork/man/wrap_plots.html" class="external-link">wrap_plots</a></span><span class="op">(</span><span class="va">plots</span>, ncol <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
 <div class="figure">
 <img src="benchmark_files/figure-html/umap-grid-1.png" class="r-plt" alt="All methods coloured by ADT-derived protein label." width="1500"><p class="caption">
 All methods coloured by ADT-derived protein label.
@@ -387,8 +823,8 @@ subtypes together.</p>
 <p>Key takeaways:</p>
 <ul>
 <li>
-<strong><code>stdev</code></strong> is the safest default — only a
-marginal ARI change, same k-NN purity as standard.</li>
+<strong><code>stdev</code></strong> is the safest global default —
+only a marginal ARI change, same k-NN purity as standard.</li>
 <li>
 <strong><code>prop.var</code> with
 <code>weight.factor = 0.5</code></strong> (partial blend) avoids the
@@ -398,28 +834,126 @@ worst of over-emphasising PC 1.</li>
 PC 1 dominance and recovers some ARI compared to full
 <code>prop.var</code>.</li>
 <li>
-<strong><code>mp.filter = TRUE</code></strong> (here combined with
-<code>stdev</code>) automatically zeros out noise PCs whose variance is
-below the Marchenko–Pastur ceiling, then applies the chosen weighting to
-the remaining signal PCs. On datasets where most PCs are genuine signal
-it behaves like the base scheme; on noisier datasets it can sharpen
-clusters by discarding uninformative PCs entirely.</li>
-<li>
-<strong>Local PCA (stdev)</strong> uses per-neighbourhood SVD
-distances weighted by local standard deviation, with
-<code><a href="../reference/RunLocalPCANeighbors.html">RunLocalPCANeighbors()</a></code> providing consistent clustering and
-UMAP graphs. It is now a fully integrated workflow comparable to the
-global weighting methods.</li>
-<li>k-NN purity differences are generally small across all methods,
-indicating UMAP topology is broadly preserved — the main effect is on
-Louvain cluster resolution.</li>
+<strong><code>mp.filter = TRUE</code></strong> (global: combined
+with <code>stdev</code>) automatically zeros out noise PCs whose
+variance is below the Marchenko–Pastur ceiling. On datasets where most
+PCs are genuine signal it behaves like the base scheme; on noisier
+datasets it can sharpen clusters.</li>
 </ul>
-<p><strong>Recommendation</strong>: start with the default
-<code>weight.by = "stdev"</code>, and use <code>mp.filter = TRUE</code>
-when you want a principled, data-driven noise threshold. Use
-<code><a href="../reference/RunLocalPCANeighbors.html">RunLocalPCANeighbors()</a></code> + <code><a href="../reference/RunLocalPCAUMAP.html">RunLocalPCAUMAP()</a></code>
-when you suspect the dataset has strong local anisotropic structure
-(trajectories, gradients) that a global metric would miss.</p>
+<div class="section level3">
+<h3 id="local-pca-parameter-sweep-1">Local PCA parameter sweep<a class="anchor" aria-label="anchor" href="#local-pca-parameter-sweep-1"></a>
+</h3>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">k_aris</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">ari_lp_k10</span>, <span class="va">ari_lp_k20</span>, <span class="va">ari_lp</span>, <span class="va">ari_lp_k50</span><span class="op">)</span></span>
+<span><span class="va">k_vals</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">20</span>, <span class="fl">30</span>, <span class="fl">50</span><span class="op">)</span></span>
+<span><span class="va">best_k</span>  <span class="op">&lt;-</span> <span class="va">k_vals</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.min.html" class="external-link">which.max</a></span><span class="op">(</span><span class="va">k_aris</span><span class="op">)</span><span class="op">]</span></span>
+<span></span>
+<span><span class="va">ld_aris</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">ari_lp_ld5</span>, <span class="va">ari_lp_ld10</span>, <span class="va">ari_lp_ld15</span>, <span class="va">ari_lp</span><span class="op">)</span></span>
+<span><span class="va">ld_vals</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">10</span>, <span class="fl">15</span>, <span class="fl">30</span><span class="op">)</span></span>
+<span><span class="va">best_ld</span> <span class="op">&lt;-</span> <span class="va">ld_vals</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.min.html" class="external-link">which.max</a></span><span class="op">(</span><span class="va">ld_aris</span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
+<p>For the <strong>k.param sweep</strong>, <code>k = 50</code> achieves
+the highest ARI (0.558).</p>
+<ul>
+<li>If ARI improves at smaller k, finer local structure (e.g. subtle
+sub-types) is being captured.</li>
+<li>If ARI is flat across k, the local SVD is not providing information
+beyond a global metric on this dataset.</li>
+<li>If ARI degrades at very small k (e.g. k=10), the neighbourhood is
+too small for a stable SVD and the metric becomes noisy.</li>
+</ul>
+<p>For the <strong>local.dims sweep</strong> (k=30),
+<code>local.dims = 5</code> achieves the highest ARI (0.554).</p>
+<ul>
+<li>If fewer local dims performs better, the weaker local directions add
+noise rather than signal — truncation acts as implicit
+regularisation.</li>
+<li>If all dims perform similarly, the choice of <code>local.dims</code>
+is not a sensitive parameter for this dataset.</li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="local-pca-weighting-schemes-at-k30">Local PCA weighting schemes (at k=30)<a class="anchor" aria-label="anchor" href="#local-pca-weighting-schemes-at-k30"></a>
+</h3>
+<p>The following table and summary cover the four weighting variants at
+the default k=30, comparing stdev, prop.var, none, and
+stdev+mp.filter.</p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr class="header">
+<th>Setting</th>
+<th>What it does</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>local.weight.by = "stdev"</code></td>
+<td>Weights each local PC by its local std dev — gently emphasises
+dominant local directions</td>
+</tr>
+<tr class="even">
+<td><code>local.weight.by = "prop.var"</code></td>
+<td>Weights by proportion of local variance — more aggressive emphasis
+on the leading local direction</td>
+</tr>
+<tr class="odd">
+<td><code>local.weight.by = "none"</code></td>
+<td>Equal weight to all local PCs — isotropic local PCA distance</td>
+</tr>
+<tr class="even">
+<td><code>stdev + mp.filter = TRUE</code></td>
+<td>Runs stdev weighting then zeros local PCs below the
+per-neighbourhood MP noise threshold</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">lp_results</span> <span class="op">&lt;-</span> <span class="va">results</span><span class="op">[</span><span class="va">results</span><span class="op">$</span><span class="va">Method</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  <span class="st">"local PCA (stdev)"</span>, <span class="st">"local PCA (prop.var)"</span>,</span>
+<span>  <span class="st">"local PCA (none)"</span>, <span class="st">"local PCA (stdev + mp.filter)"</span></span>
+<span><span class="op">)</span>, <span class="op">]</span></span>
+<span><span class="va">best_lp</span>  <span class="op">&lt;-</span> <span class="va">lp_results</span><span class="op">$</span><span class="va">Method</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.min.html" class="external-link">which.max</a></span><span class="op">(</span><span class="va">lp_results</span><span class="op">$</span><span class="va">ARI</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="va">worst_lp</span> <span class="op">&lt;-</span> <span class="va">lp_results</span><span class="op">$</span><span class="va">Method</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.min.html" class="external-link">which.min</a></span><span class="op">(</span><span class="va">lp_results</span><span class="op">$</span><span class="va">ARI</span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
+<p>Among the local PCA variants, <strong>local PCA (stdev)</strong>
+achieves the highest ARI (0.554) and <strong>local PCA (stdev)</strong>
+the lowest (0.554).</p>
+<p>In general:</p>
+<ul>
+<li>If all local PCA variants score similarly to each other, the local
+graph structure (rather than the weighting scheme) is the dominant
+factor; the <code>stdev</code> default is sufficient.</li>
+<li>If <code>prop.var</code> outperforms <code>stdev</code>, the dataset
+has strong anisotropic local structure and aggressive local direction
+emphasis pays off.</li>
+<li>If <code>none</code> is competitive, the data has broadly isotropic
+neighbourhoods and local weighting adds little.</li>
+<li>If <code>stdev + mp.filter</code> outperforms plain
+<code>stdev</code>, per-neighbourhood noise PCs were degrading the
+distance estimate and zeroing them helps.</li>
+</ul>
+<p>Comparing local PCA methods against global methods: local PCA will
+typically match or surpass global weighting on trajectory-like or
+heterogeneous datasets, but on PBMC data with a dominant
+monocyte–lymphocyte axis the global and local distances may perform
+similarly.</p>
+<p><strong>Note on interpretation</strong>: all wUMAP weighting schemes
+are heuristic modifications of the input distance metric — they are not
+derived from a statistical model of scRNA-seq noise. On this PBMC
+dataset the differences between methods tend to be small. The benchmark
+measures whether the heuristics help; results will vary by dataset.</p>
+<p><strong>Recommendation</strong>: the default
+<code>weight.by = "stdev"</code> /
+<code>local.weight.by = "stdev"</code> applies the mildest
+transformation and is a reasonable starting point. Use
+<code>mp.filter = TRUE</code> to additionally zero PCs below the
+Marchenko-Pastur noise ceiling (a principled threshold, though
+calibrated for i.i.d. Gaussian data and therefore approximate on
+scRNA-seq). Try <code><a href="../reference/RunLocalPCANeighbors.html">RunLocalPCANeighbors()</a></code> +
+<code><a href="../reference/RunLocalPCAUMAP.html">RunLocalPCAUMAP()</a></code> when you suspect the data has locally
+anisotropic structure (trajectories, gradients), but verify empirically
+that it helps.</p>
+</div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
