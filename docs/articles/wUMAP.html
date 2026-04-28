@@ -4,66 +4,62 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Variance-Weighted UMAP with wUMAP • wUMAP</title>
-<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="../bootstrap-toc.css">
-<script src="../bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
-<!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
-<script src="../pkgdown.js"></script><meta property="og:title" content="Variance-Weighted UMAP with wUMAP">
-<!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
-<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
-<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-<![endif]-->
+<script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Variance-Weighted UMAP with wUMAP">
 </head>
-<body data-spy="scroll" data-target="#toc">
+<body>
+    <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
-    <div class="container template-article">
-      <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
-  <div class="container">
-    <div class="navbar-header">
-      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false">
-        <span class="sr-only">Toggle navigation</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
-      <span class="navbar-brand">
-        <a class="navbar-link" href="../index.html">wUMAP</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
-      </span>
-    </div>
+    <nav class="navbar navbar-expand-lg fixed-top bg-light" data-bs-theme="light" aria-label="Site navigation"><div class="container">
 
-    <div id="navbar" class="navbar-collapse collapse">
-      <ul class="nav navbar-nav">
-<li>
-  <a href="../articles/wUMAP.html">Get started</a>
+    <a class="navbar-brand me-2" href="../index.html">wUMAP</a>
+
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div id="navbar" class="collapse navbar-collapse ms-3">
+      <ul class="navbar-nav me-auto">
+<li class="active nav-item"><a class="nav-link" href="../articles/wUMAP.html">Get started</a></li>
+<li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
+<li><a class="dropdown-item" href="../articles/wUMAP.html">Get started</a></li>
+    <li><a class="dropdown-item" href="../articles/benchmark.html">Benchmark</a></li>
+  </ul>
 </li>
-<li>
-  <a href="../reference/index.html">Reference</a>
-</li>
+<li class="nav-item"><a class="nav-link" href="../articles/benchmark.html">Benchmark</a></li>
       </ul>
-<ul class="nav navbar-nav navbar-right"></ul>
+<ul class="navbar-nav">
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/LachlanD/weightedUMAP" aria-label="GitHub"><span class="fa fab fa-github"></span></a></li>
+      </ul>
 </div>
-<!--/.nav-collapse -->
+
+
   </div>
-<!--/.container -->
-</div>
-<!--/.navbar -->
+</nav><div class="container template-article">
 
 
 
-      </header><div class="row">
-  <div class="col-md-9 contents">
-    <div class="page-header toc-ignore">
-      <h1 data-toc-skip>Variance-Weighted UMAP with wUMAP</h1>
+
+<div class="row">
+  <main id="main" class="col-md-9"><div class="page-header">
+
+      <h1>Variance-Weighted UMAP with wUMAP</h1>
             
       
 
-      <div class="hidden name"><code>wUMAP.Rmd</code></div>
-
+      <div class="d-none name"><code>wUMAP.Rmd</code></div>
     </div>
 
     
@@ -251,172 +247,27 @@ Clustering and UMAP both derived from the same weighted KNN graph.
 </div>
 </div>
 <div class="section level2">
-<h2 id="benchmark-does-weighting-improve-clustering">Benchmark: does weighting improve clustering?<a class="anchor" aria-label="anchor" href="#benchmark-does-weighting-improve-clustering"></a>
+<h2 id="further-reading">Further reading<a class="anchor" aria-label="anchor" href="#further-reading"></a>
 </h2>
-<p>To evaluate clustering quality against an
-<strong>independent</strong> ground truth, we use the <code>cbmc</code>
-CITE-seq dataset from <code>SeuratData</code>. Each cell has both RNA
-and surface-protein (ADT) measurements — protein labels are derived from
-ADT, so they are orthogonal to RNA-based clustering and provide a
-genuine benchmark.</p>
-<p>We compare two metrics:</p>
-<ul>
-<li>
-<strong>ARI</strong> (Adjusted Rand Index): how well RNA clusters
-match protein-derived cell types. Range 0–1, higher = better.</li>
-<li>
-<strong>k-NN purity</strong>: fraction of each cell’s 20 nearest
-UMAP neighbours that share its protein label. Range 0–1, higher =
-better.</li>
-</ul>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mclust-org.github.io/mclust/" class="external-link">mclust</a></span><span class="op">)</span>  <span class="co"># for adjustedRandIndex</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/jefferislab/RANN" class="external-link">RANN</a></span><span class="op">)</span>    <span class="co"># for fast k-NN</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">cbmc</span><span class="op">)</span></span>
-<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.github.io/seurat-object/reference/UpdateSeuratObject.html" class="external-link">UpdateSeuratObject</a></span><span class="op">(</span><span class="va">cbmc</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Keep only cells with protein labels; remove doublets</span></span>
-<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="va">cbmc</span><span class="op">[</span>, <span class="op">!</span><span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="st">"T/Mono doublets"</span> <span class="op">&amp;</span></span>
-<span>               <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span><span class="op">]</span></span>
-<span></span>
-<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/NormalizeData.html" class="external-link">NormalizeData</a></span><span class="op">(</span><span class="va">cbmc</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindVariableFeatures.html" class="external-link">FindVariableFeatures</a></span><span class="op">(</span><span class="va">cbmc</span>, nfeatures <span class="op">=</span> <span class="fl">2000</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/ScaleData.html" class="external-link">ScaleData</a></span><span class="op">(</span><span class="va">cbmc</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/RunPCA.html" class="external-link">RunPCA</a></span><span class="op">(</span><span class="va">cbmc</span>, npcs <span class="op">=</span> <span class="fl">30</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">knn_purity</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">emb</span>, <span class="va">labels</span>, <span class="va">k</span> <span class="op">=</span> <span class="fl">20</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">nn</span>  <span class="op">&lt;-</span> <span class="fu">RANN</span><span class="fu">::</span><span class="fu"><a href="https://jefferislab.github.io/RANN/reference/nn2.html" class="external-link">nn2</a></span><span class="op">(</span><span class="va">emb</span>, k <span class="op">=</span> <span class="va">k</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span><span class="op">$</span><span class="va">nn.idx</span><span class="op">[</span>, <span class="op">-</span><span class="fl">1</span><span class="op">]</span></span>
-<span>  <span class="va">lab</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">labels</span><span class="op">)</span><span class="op">)</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">nn</span><span class="op">)</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">lab</span><span class="op">[</span><span class="va">nn</span><span class="op">[</span><span class="va">i</span>, <span class="op">]</span><span class="op">]</span> <span class="op">==</span> <span class="va">lab</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="op">}</span></span></code></pre></div>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Standard</span></span>
-<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindNeighbors.html" class="external-link">FindNeighbors</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">cbmc</span>,  resolution <span class="op">=</span> <span class="fl">0.8</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/RunUMAP.html" class="external-link">RunUMAP</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, reduction.name <span class="op">=</span> <span class="st">"umap.std"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="va">ari_std</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://mclust-org.github.io/mclust/reference/adjustedRandIndex.html" class="external-link">adjustedRandIndex</a></span><span class="op">(</span><span class="va">cbmc</span><span class="op">$</span><span class="va">seurat_clusters</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span></span>
-<span><span class="va">pur_std</span> <span class="op">&lt;-</span> <span class="fu">knn_purity</span><span class="op">(</span><span class="fu"><a href="https://satijalab.github.io/seurat-object/reference/Embeddings.html" class="external-link">Embeddings</a></span><span class="op">(</span><span class="va">cbmc</span>, <span class="st">"umap.std"</span><span class="op">)</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># stdev weighted (gentler emphasis on early PCs)</span></span>
-<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunWeightedNeighbors.html">RunWeightedNeighbors</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, weight.by <span class="op">=</span> <span class="st">"stdev"</span>,</span>
-<span>                             prefix <span class="op">=</span> <span class="st">"wt"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">cbmc</span>, graph.name <span class="op">=</span> <span class="st">"wt_snn"</span>, resolution <span class="op">=</span> <span class="fl">0.8</span>,</span>
-<span>                     verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="va">cbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunWeightedUMAP.html">RunWeightedUMAP</a></span><span class="op">(</span><span class="va">cbmc</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, weight.by <span class="op">=</span> <span class="st">"stdev"</span>,</span>
-<span>                        reduction.name <span class="op">=</span> <span class="st">"umap.wt"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="va">ari_wt</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://mclust-org.github.io/mclust/reference/adjustedRandIndex.html" class="external-link">adjustedRandIndex</a></span><span class="op">(</span><span class="va">cbmc</span><span class="op">$</span><span class="va">seurat_clusters</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span></span>
-<span><span class="va">pur_wt</span> <span class="op">&lt;-</span> <span class="fu">knn_purity</span><span class="op">(</span><span class="fu"><a href="https://satijalab.github.io/seurat-object/reference/Embeddings.html" class="external-link">Embeddings</a></span><span class="op">(</span><span class="va">cbmc</span>, <span class="st">"umap.wt"</span><span class="op">)</span>, <span class="va">cbmc</span><span class="op">$</span><span class="va">protein_annotations</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://satijalab.github.io/seurat-object/reference/Idents.html" class="external-link">Idents</a></span><span class="op">(</span><span class="va">cbmc</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"protein_annotations"</span></span>
-<span><span class="va">p_std</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">cbmc</span>, reduction <span class="op">=</span> <span class="st">"umap.std"</span>, label <span class="op">=</span> <span class="cn">TRUE</span>, repel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Standard  ARI=%.3f  kNN=%.3f"</span>, <span class="va">ari_std</span>, <span class="va">pur_std</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="va">p_wt</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">cbmc</span>, reduction <span class="op">=</span> <span class="st">"umap.wt"</span>,  label <span class="op">=</span> <span class="cn">TRUE</span>, repel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"stdev weighted  ARI=%.3f  kNN=%.3f"</span>, <span class="va">ari_wt</span>, <span class="va">pur_wt</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="va">p_std</span> <span class="op">|</span> <span class="va">p_wt</span></span></code></pre></div>
-<div class="figure">
-<img src="wUMAP_files/figure-html/cbmc-bench-1.png" class="r-plt" alt="UMAP coloured by protein-derived cell type. Standard (left) vs stdev-weighted (right)." width="1500"><p class="caption">
-UMAP coloured by protein-derived cell type. Standard (left) vs
-stdev-weighted (right).
-</p>
+<p>For a quantitative evaluation of all weighting schemes against an
+independent protein-based ground truth (cbmc CITE-seq), see the <a href="benchmark.html">Benchmark</a> article.</p>
 </div>
-<table class="table">
-<caption>Clustering quality vs protein labels on cbmc CITE-seq (n=7,699
-cells)</caption>
-<thead><tr class="header">
-<th align="left">Method</th>
-<th align="right">ARI</th>
-<th align="right">kNN_purity</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td align="left">standard (none)</td>
-<td align="right">0.548</td>
-<td align="right">0.927</td>
-</tr>
-<tr class="even">
-<td align="left">stdev</td>
-<td align="right">0.504</td>
-<td align="right">0.927</td>
-</tr>
-<tr class="odd">
-<td align="left">stdev + log.scale</td>
-<td align="right">0.503</td>
-<td align="right">0.929</td>
-</tr>
-<tr class="even">
-<td align="left">prop.var wf=0.5</td>
-<td align="right">0.496</td>
-<td align="right">0.924</td>
-</tr>
-<tr class="odd">
-<td align="left">prop.var wf=1</td>
-<td align="right">0.318</td>
-<td align="right">0.878</td>
-</tr>
-<tr class="even">
-<td align="left">prop.var + log.scale</td>
-<td align="right">0.398</td>
-<td align="right">0.880</td>
-</tr>
-</tbody>
-</table>
-<div class="section level3">
-<h3 id="interpretation">Interpretation<a class="anchor" aria-label="anchor" href="#interpretation"></a>
-</h3>
-<p>On this PBMC-like dataset, aggressive <code>prop.var</code> weighting
-(<em>wf=1</em>) <strong>reduces</strong> clustering quality (ARI 0.548 →
-0.318). This is because PC 1 in scRNA-seq often captures cell size or
-library-depth variation as much as cell type, so over-emphasising it
-pushes unrelated cells together.</p>
-<p>Key observations:</p>
-<ul>
-<li>
-<code>stdev</code> weighting produces only a modest reduction in ARI
-(0.548 → 0.504) while maintaining the same k-NN purity in UMAP space
-(0.927).</li>
-<li>
-<code>prop.var</code> with <code>weight.factor = 0.5</code> (partial
-blend) is a safer choice than full weighting.</li>
-<li>
-<code>log.scale = TRUE</code> partially mitigates the dominance of
-PC 1 and recovers some ARI compared to full <code>prop.var</code>.</li>
-<li>k-NN purity differences are small across all methods, suggesting the
-UMAP topology is similar — the main effect is on cluster
-resolution.</li>
-</ul>
-<p><strong>Recommendation:</strong> start with
-<code>weight.by = "stdev"</code> or
-<code>weight.by = "prop.var", weight.factor = 0.5</code> and inspect
-cluster marker genes to judge whether the weighting is helping reveal or
-obscuring biology in your specific dataset.</p>
-</div>
-</div>
-  </div>
-
-  <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
-
-      </div>
-
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside>
 </div>
 
 
 
-      <footer><div class="copyright">
-  <p></p>
-<p>Developed by Lachlan Dryburgh.</p>
+    <footer><div class="pkgdown-footer-left">
+  <p>Developed by Lachlan Dryburgh.</p>
 </div>
 
-<div class="pkgdown">
-  <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+<div class="pkgdown-footer-right">
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
-      </footer>
+    </footer>
 </div>
-
 
 
 

@@ -1,0 +1,30 @@
+url: https://lachland.github.io/weightedUMAP/
+
+template:
+  bootstrap: 5
+
+navbar:
+  structure:
+    left:  [intro, reference, articles, benchmark]
+    right: [github]
+  components:
+    intro:
+      text: Get started
+      href: articles/wUMAP.html
+    reference:
+      text: Reference
+      href: reference/index.html
+    articles:
+      text: Articles
+      menu:
+        - text: "Get started"
+          href: articles/wUMAP.html
+        - text: "Benchmark"
+          href: articles/benchmark.html
+    benchmark:
+      text: Benchmark
+      href: articles/benchmark.html
+    github:
+      icon: fab fa-github
+      href: https://github.com/LachlanD/weightedUMAP
+      aria-label: GitHub
