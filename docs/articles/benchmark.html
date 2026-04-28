@@ -492,7 +492,7 @@ Local PCA parameter sweep. Dashed line = standard UMAP ARI baseline.
 <span>  <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">cbmc</span>, reduction <span class="op">=</span> <span class="st">"umap.lp"</span>,      label <span class="op">=</span> <span class="cn">TRUE</span>, repel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"local.dims=30 (baseline)  ARI=%.3f"</span>, <span class="va">ari_lp</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/patchwork/man/wrap_plots.html" class="external-link">wrap_plots</a></span><span class="op">(</span><span class="va">sweep_plots</span>, ncol <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://patchwork.data-imaginist.com/reference/wrap_plots.html" class="external-link">wrap_plots</a></span><span class="op">(</span><span class="va">sweep_plots</span>, ncol <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
 <div class="figure">
 <img src="benchmark_files/figure-html/local-pca-sweep-umaps-1.png" class="r-plt" alt="k.param sweep (top, stdev weighting) and local.dims sweep (bottom, k=30, stdev weighting)." width="1500"><p class="caption">
 k.param sweep (top, stdev weighting) and local.dims sweep (bottom, k=30,
@@ -805,7 +805,7 @@ baseline.
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"local PCA stdev+mp.filter  ARI=%.3f"</span>, <span class="va">ari_lp_mp</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/patchwork/man/wrap_plots.html" class="external-link">wrap_plots</a></span><span class="op">(</span><span class="va">plots</span>, ncol <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://patchwork.data-imaginist.com/reference/wrap_plots.html" class="external-link">wrap_plots</a></span><span class="op">(</span><span class="va">plots</span>, ncol <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
 <div class="figure">
 <img src="benchmark_files/figure-html/umap-grid-1.png" class="r-plt" alt="All methods coloured by ADT-derived protein label." width="1500"><p class="caption">
 All methods coloured by ADT-derived protein label.
@@ -953,6 +953,155 @@ scRNA-seq). Try <code><a href="../reference/RunLocalPCANeighbors.html">RunLocalP
 <code><a href="../reference/RunLocalPCAUMAP.html">RunLocalPCAUMAP()</a></code> when you suspect the data has locally
 anisotropic structure (trajectories, gradients), but verify empirically
 that it helps.</p>
+</div>
+</div>
+<div class="section level2">
+<h2 id="trajectory-dataset-c--elegans-embryo">Trajectory dataset: C. elegans embryo<a class="anchor" aria-label="anchor" href="#trajectory-dataset-c--elegans-embryo"></a>
+</h2>
+<p>To test the claim that wUMAP performs better on trajectory-like or
+highly heterogeneous datasets, we benchmark on the
+<code>celegans.embryo</code> dataset from <code>SeuratData</code>, which
+contains a developmental trajectory across worm embryo stages.</p>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Install and load celegans.embryo dataset from SeuratData if not already present</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="st">"celegans.embryo"</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu">SeuratData</span><span class="fu">::</span><span class="fu"><a href="https://satijalab.org/seurat/reference/AvailableData.html" class="external-link">AvailableData</a></span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">Dataset</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu">SeuratData</span><span class="fu">::</span><span class="fu"><a href="https://satijalab.org/seurat/reference/InstallData.html" class="external-link">InstallData</a></span><span class="op">(</span><span class="st">"celegans.embryo"</span>, ask <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://www.satijalab.org/seurat" class="external-link">SeuratData</a></span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">celegans.embryo</span><span class="op">)</span></span>
+<span><span class="va">embryo</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.github.io/seurat-object/reference/UpdateSeuratObject.html" class="external-link">UpdateSeuratObject</a></span><span class="op">(</span><span class="va">celegans.embryo</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Validating object structure</span></span>
+<span><span class="co">#&gt; Updating object slots</span></span>
+<span><span class="co">#&gt; Ensuring keys are in the proper structure</span></span>
+<span><span class="co">#&gt; Warning: Assay RNA changing from Assay to Assay</span></span>
+<span><span class="co">#&gt; Ensuring keys are in the proper structure</span></span>
+<span><span class="co">#&gt; Ensuring feature names don't have underscores or pipes</span></span>
+<span><span class="co">#&gt; Updating slots in RNA</span></span>
+<span><span class="co">#&gt; Validating object structure for Assay 'RNA'</span></span>
+<span><span class="co">#&gt; Object representation is consistent with the most current Seurat version</span></span>
+<span><span class="va">embryo</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/NormalizeData.html" class="external-link">NormalizeData</a></span><span class="op">(</span><span class="va">embryo</span><span class="op">)</span></span>
+<span><span class="va">embryo</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindVariableFeatures.html" class="external-link">FindVariableFeatures</a></span><span class="op">(</span><span class="va">embryo</span>, nfeatures <span class="op">=</span> <span class="fl">2000</span><span class="op">)</span></span>
+<span><span class="va">embryo</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/ScaleData.html" class="external-link">ScaleData</a></span><span class="op">(</span><span class="va">embryo</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Centering and scaling data matrix</span></span>
+<span><span class="va">embryo</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/RunPCA.html" class="external-link">RunPCA</a></span><span class="op">(</span><span class="va">embryo</span>, npcs <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span>
+<span><span class="co">#&gt; PC_ 1 </span></span>
+<span><span class="co">#&gt; Positive:  WBGene00009212, WBGene00002253, WBGene00015610, WBGene00019432, WBGene00013553, WBGene00001854, WBGene00018606, WBGene00000217, WBGene00044066, WBGene00022111 </span></span>
+<span><span class="co">#&gt;     WBGene00016088, WBGene00022112, WBGene00011156, WBGene00016071, WBGene00012021, WBGene00235158, WBGene00012899, WBGene00020537, WBGene00020205, WBGene00009385 </span></span>
+<span><span class="co">#&gt;     WBGene00000405, WBGene00008447, WBGene00000411, WBGene00003159, WBGene00269431, WBGene00002085, WBGene00012900, WBGene00000868, WBGene00021299, WBGene00008510 </span></span>
+<span><span class="co">#&gt; Negative:  WBGene00016463, WBGene00011500, WBGene00007883, WBGene00249817, WBGene00004346, WBGene00022144, WBGene00012853, WBGene00008453, WBGene00003851, WBGene00004207 </span></span>
+<span><span class="co">#&gt;     WBGene00011545, WBGene00001189, WBGene00008288, WBGene00010236, WBGene00219372, WBGene00017671, WBGene00010239, WBGene00019324, WBGene00021395, WBGene00011289 </span></span>
+<span><span class="co">#&gt;     WBGene00022419, WBGene00001122, WBGene00020710, WBGene00009716, WBGene00005655, WBGene00003642, WBGene00044144, WBGene00016321, WBGene00010864, WBGene00003934 </span></span>
+<span><span class="co">#&gt; PC_ 2 </span></span>
+<span><span class="co">#&gt; Positive:  WBGene00010559, WBGene00015354, WBGene00008840, WBGene00007604, WBGene00019269, WBGene00010575, WBGene00017150, WBGene00005585, WBGene00001992, WBGene00015411 </span></span>
+<span><span class="co">#&gt;     WBGene00005387, WBGene00017236, WBGene00004926, WBGene00010632, WBGene00010144, WBGene00011644, WBGene00005399, WBGene00009842, WBGene00019980, WBGene00022391 </span></span>
+<span><span class="co">#&gt;     WBGene00008184, WBGene00005338, WBGene00077698, WBGene00005542, WBGene00009136, WBGene00016561, WBGene00019975, WBGene00007247, WBGene00018081, WBGene00044922 </span></span>
+<span><span class="co">#&gt; Negative:  WBGene00011763, WBGene00044068, WBGene00007271, WBGene00021915, WBGene00016711, WBGene00016289, WBGene00020582, WBGene00007490, WBGene00007641, WBGene00016254 </span></span>
+<span><span class="co">#&gt;     WBGene00006055, WBGene00019482, WBGene00000895, WBGene00001535, WBGene00001548, WBGene00007286, WBGene00001543, WBGene00219310, WBGene00020190, WBGene00017076 </span></span>
+<span><span class="co">#&gt;     WBGene00001123, WBGene00044568, WBGene00004213, WBGene00018136, WBGene00009152, WBGene00164973, WBGene00194982, WBGene00009153, WBGene00011534, WBGene00001824 </span></span>
+<span><span class="co">#&gt; PC_ 3 </span></span>
+<span><span class="co">#&gt; Positive:  WBGene00007271, WBGene00044068, WBGene00007641, WBGene00019482, WBGene00007490, WBGene00219310, WBGene00018352, WBGene00011328, WBGene00007286, WBGene00001123 </span></span>
+<span><span class="co">#&gt;     WBGene00017243, WBGene00001210, WBGene00194982, WBGene00004213, WBGene00009144, WBGene00017326, WBGene00017295, WBGene00001824, WBGene00001951, WBGene00008865 </span></span>
+<span><span class="co">#&gt;     WBGene00016005, WBGene00016561, WBGene00001954, WBGene00000950, WBGene00007675, WBGene00021915, WBGene00006468, WBGene00010632, WBGene00015580, WBGene00022696 </span></span>
+<span><span class="co">#&gt; Negative:  WBGene00003591, WBGene00020582, WBGene00017076, WBGene00001548, WBGene00018136, WBGene00164973, WBGene00001543, WBGene00011534, WBGene00044568, WBGene00015214 </span></span>
+<span><span class="co">#&gt;     WBGene00006055, WBGene00009375, WBGene00007542, WBGene00045056, WBGene00001535, WBGene00011545, WBGene00021116, WBGene00003752, WBGene00004924, WBGene00020759 </span></span>
+<span><span class="co">#&gt;     WBGene00020136, WBGene00019293, WBGene00000233, WBGene00011137, WBGene00000277, WBGene00018298, WBGene00017597, WBGene00009152, WBGene00006981, WBGene00002097 </span></span>
+<span><span class="co">#&gt; PC_ 4 </span></span>
+<span><span class="co">#&gt; Positive:  WBGene00001548, WBGene00001543, WBGene00044568, WBGene00001535, WBGene00017076, WBGene00164973, WBGene00011534, WBGene00018136, WBGene00009152, WBGene00015214 </span></span>
+<span><span class="co">#&gt;     WBGene00000895, WBGene00020582, WBGene00007542, WBGene00011838, WBGene00045056, WBGene00006652, WBGene00007314, WBGene00000233, WBGene00009153, WBGene00003745 </span></span>
+<span><span class="co">#&gt;     WBGene00010285, WBGene00019293, WBGene00002097, WBGene00007543, WBGene00003722, WBGene00021089, WBGene00012586, WBGene00013891, WBGene00010606, WBGene00004926 </span></span>
+<span><span class="co">#&gt; Negative:  WBGene00012616, WBGene00004346, WBGene00013748, WBGene00017129, WBGene00044387, WBGene00044419, WBGene00044144, WBGene00044562, WBGene00022295, WBGene00044238 </span></span>
+<span><span class="co">#&gt;     WBGene00011500, WBGene00001988, WBGene00001681, WBGene00012064, WBGene00194689, WBGene00219421, WBGene00009810, WBGene00010647, WBGene00007883, WBGene00005560 </span></span>
+<span><span class="co">#&gt;     WBGene00011289, WBGene00012016, WBGene00004091, WBGene00044553, WBGene00022842, WBGene00001676, WBGene00010864, WBGene00008288, WBGene00010239, WBGene00012328 </span></span>
+<span><span class="co">#&gt; PC_ 5 </span></span>
+<span><span class="co">#&gt; Positive:  WBGene00001548, WBGene00001543, WBGene00017076, WBGene00001535, WBGene00219421, WBGene00016114, WBGene00009152, WBGene00044568, WBGene00011534, WBGene00018136 </span></span>
+<span><span class="co">#&gt;     WBGene00164973, WBGene00009901, WBGene00004207, WBGene00011838, WBGene00007314, WBGene00003890, WBGene00000233, WBGene00012616, WBGene00017129, WBGene00000895 </span></span>
+<span><span class="co">#&gt;     WBGene00044419, WBGene00009153, WBGene00003722, WBGene00014101, WBGene00007542, WBGene00007058, WBGene00010848, WBGene00013748, WBGene00045386, WBGene00005655 </span></span>
+<span><span class="co">#&gt; Negative:  WBGene00007816, WBGene00013850, WBGene00011453, WBGene00015729, WBGene00007487, WBGene00020151, WBGene00016514, WBGene00000457, WBGene00011433, WBGene00003759 </span></span>
+<span><span class="co">#&gt;     WBGene00195143, WBGene00002105, WBGene00003743, WBGene00023414, WBGene00008589, WBGene00003752, WBGene00018879, WBGene00010575, WBGene00001542, WBGene00013166 </span></span>
+<span><span class="co">#&gt;     WBGene00008651, WBGene00010316, WBGene00011888, WBGene00020759, WBGene00010971, WBGene00000483, WBGene00044582, WBGene00017858, WBGene00001456, WBGene00008287</span></span>
+<span><span class="co"># Use published cell type labels for benchmarking</span></span>
+<span><span class="fu"><a href="https://satijalab.github.io/seurat-object/reference/Idents.html" class="external-link">Idents</a></span><span class="op">(</span><span class="va">embryo</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">embryo</span><span class="op">$</span><span class="va">cell.type</span></span></code></pre></div>
+<div class="section level3">
+<h3 id="wumap-baseline-weight-none">wUMAP baseline: weight.none<a class="anchor" aria-label="anchor" href="#wumap-baseline-weight-none"></a>
+</h3>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">embryo</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunWeightedNeighbors.html">RunWeightedNeighbors</a></span><span class="op">(</span><span class="va">embryo</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, weight.by <span class="op">=</span> <span class="st">"none"</span>, prefix <span class="op">=</span> <span class="st">"wt.none"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [wUMAP] Weight scheme : none (factor = 1)</span></span>
+<span><span class="co">#&gt; [wUMAP] Dimensions    : 30 (dims 1–30)</span></span>
+<span><span class="co">#&gt; [wUMAP] Weights       : PC1=1, PC2=1, PC3=1, PC4=1, PC5=1, PC6=1, PC7=1, PC8=1, PC9=1, PC10=1, ...</span></span>
+<span><span class="co">#&gt; [wUMAP] Stored weighted embeddings as 'wt.pca'</span></span>
+<span><span class="co">#&gt; [wUMAP] Running FindNeighbors (k = 20) on 'wt.pca'</span></span>
+<span><span class="co">#&gt; Computing nearest neighbor graph</span></span>
+<span><span class="co">#&gt; Computing SNN</span></span>
+<span><span class="va">embryo</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">embryo</span>, graph.name <span class="op">=</span> <span class="st">"wt.none_snn"</span>, cluster.name <span class="op">=</span> <span class="st">"wt.none_clusters"</span>, resolution <span class="op">=</span> <span class="fl">0.8</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="wumap-stdev-weighting">wUMAP (stdev weighting)<a class="anchor" aria-label="anchor" href="#wumap-stdev-weighting"></a>
+</h3>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">embryo</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunWeightedNeighbors.html">RunWeightedNeighbors</a></span><span class="op">(</span><span class="va">embryo</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, weight.by <span class="op">=</span> <span class="st">"stdev"</span>, prefix <span class="op">=</span> <span class="st">"wt.stdev"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [wUMAP] Weight scheme : stdev (factor = 1)</span></span>
+<span><span class="co">#&gt; [wUMAP] Dimensions    : 30 (dims 1–30)</span></span>
+<span><span class="co">#&gt; [wUMAP] Weights       : PC1=0.0975, PC2=0.0616, PC3=0.0568, PC4=0.0486, PC5=0.0418, PC6=0.041, PC7=0.0378, PC8=0.0358, PC9=0.0354, PC10=0.0347, ...</span></span>
+<span><span class="co">#&gt; [wUMAP] Stored weighted embeddings as 'wt.pca'</span></span>
+<span><span class="co">#&gt; [wUMAP] Running FindNeighbors (k = 20) on 'wt.pca'</span></span>
+<span><span class="co">#&gt; Computing nearest neighbor graph</span></span>
+<span><span class="co">#&gt; Computing SNN</span></span>
+<span><span class="va">embryo</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">embryo</span>, graph.name <span class="op">=</span> <span class="st">"wt.stdev_snn"</span>, cluster.name <span class="op">=</span> <span class="st">"wt.stdev_clusters"</span>, resolution <span class="op">=</span> <span class="fl">0.8</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="umap-embedding">UMAP embedding<a class="anchor" aria-label="anchor" href="#umap-embedding"></a>
+</h3>
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
+<span><span class="va">embryo</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/RunUMAP.html" class="external-link">RunUMAP</a></span><span class="op">(</span><span class="va">embryo</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, reduction.name <span class="op">=</span> <span class="st">"umap"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; 16:22:11 UMAP embedding parameters a = 0.9922 b = 1.112</span></span>
+<span><span class="co">#&gt; 16:22:11 Read 6188 rows and found 30 numeric columns</span></span>
+<span><span class="co">#&gt; 16:22:11 Using Annoy for neighbor search, n_neighbors = 30</span></span>
+<span><span class="co">#&gt; 16:22:11 Building Annoy index with metric = cosine, n_trees = 50</span></span>
+<span><span class="co">#&gt; 0%   10   20   30   40   50   60   70   80   90   100%</span></span>
+<span><span class="co">#&gt; [----|----|----|----|----|----|----|----|----|----|</span></span>
+<span><span class="co">#&gt; **************************************************|</span></span>
+<span><span class="co">#&gt; 16:22:12 Writing NN index file to temp file /var/folders/b9/bldjd_1s567761v6zm1g7v380000gp/T//Rtmp4BlXFK/filefb5f35b5029c</span></span>
+<span><span class="co">#&gt; 16:22:12 Searching Annoy index using 1 thread, search_k = 3000</span></span>
+<span><span class="co">#&gt; 16:22:12 Annoy recall = 100%</span></span>
+<span><span class="co">#&gt; 16:22:13 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30</span></span>
+<span><span class="co">#&gt; 16:22:13 Initializing from normalized Laplacian + noise (using RSpectra)</span></span>
+<span><span class="co">#&gt; 16:22:13 Commencing optimization for 500 epochs, with 244672 positive edges</span></span>
+<span><span class="co">#&gt; 16:22:13 Using rng type: pcg</span></span>
+<span><span class="co">#&gt; 16:22:18 Optimization finished</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="visualization">Visualization<a class="anchor" aria-label="anchor" href="#visualization"></a>
+</h3>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">p1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">embryo</span>, reduction <span class="op">=</span> <span class="st">"umap"</span>, group.by <span class="op">=</span> <span class="st">"wt.none_clusters"</span>, label <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"wUMAP weight.none (standard)"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">p2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">embryo</span>, reduction <span class="op">=</span> <span class="st">"umap"</span>, group.by <span class="op">=</span> <span class="st">"wt.stdev_clusters"</span>, label <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"wUMAP stdev"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">p1</span> <span class="op">|</span> <span class="va">p2</span></span></code></pre></div>
+<p><img src="benchmark_files/figure-html/embryo-umap-plot-1.png" class="r-plt" alt="" width="1500"></p>
+</div>
+<div class="section level3">
+<h3 id="quantitative-comparison">Quantitative comparison<a class="anchor" aria-label="anchor" href="#quantitative-comparison"></a>
+</h3>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mclust-org.github.io/mclust/" class="external-link">mclust</a></span><span class="op">)</span></span>
+<span><span class="va">ari_none</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://mclust-org.github.io/mclust/reference/adjustedRandIndex.html" class="external-link">adjustedRandIndex</a></span><span class="op">(</span><span class="va">embryo</span><span class="op">$</span><span class="va">cell.type</span>, <span class="va">embryo</span><span class="op">$</span><span class="va">wt.none_clusters</span><span class="op">)</span></span>
+<span><span class="va">ari_stdev</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://mclust-org.github.io/mclust/reference/adjustedRandIndex.html" class="external-link">adjustedRandIndex</a></span><span class="op">(</span><span class="va">embryo</span><span class="op">$</span><span class="va">cell.type</span>, <span class="va">embryo</span><span class="op">$</span><span class="va">wt.stdev_clusters</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>Method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"wUMAP weight.none"</span>, <span class="st">"wUMAP stdev"</span><span class="op">)</span>,</span>
+<span>           ARI <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">ari_none</span>, <span class="va">ari_stdev</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;              Method       ARI</span></span>
+<span><span class="co">#&gt; 1 wUMAP weight.none 0.6177728</span></span>
+<span><span class="co">#&gt; 2       wUMAP stdev 0.5062476</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="interpretation-1">Interpretation<a class="anchor" aria-label="anchor" href="#interpretation-1"></a>
+</h3>
+<p>On this trajectory dataset, compare the ARI and visual separation of
+cell types between standard UMAP and wUMAP. If wUMAP better preserves
+the developmental trajectory or improves ARI, it supports the claim.
+Otherwise, the benefit may be context-dependent.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

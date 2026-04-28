@@ -718,3 +718,68 @@ i.i.d. Gaussian data and therefore approximate on scRNA-seq).  Try
 `RunLocalPCANeighbors()` + `RunLocalPCAUMAP()` when you suspect the data has
 locally anisotropic structure (trajectories, gradients), but verify empirically
 that it helps.
+
+## Trajectory dataset: C. elegans embryo
+
+To test the claim that wUMAP performs better on trajectory-like or highly heterogeneous datasets, we benchmark on the `celegans.embryo` dataset from `SeuratData`, which contains a developmental trajectory across worm embryo stages.
+
+```{r embryo-setup, message=TRUE, warning=TRUE}
+# Install and load celegans.embryo dataset from SeuratData if not already present
+if (!"celegans.embryo" %in% SeuratData::AvailableData()$Dataset) {
+  SeuratData::InstallData("celegans.embryo", ask = FALSE)
+}
+library(SeuratData)
+data(celegans.embryo)
+embryo <- UpdateSeuratObject(celegans.embryo)
+embryo <- NormalizeData(embryo)
+embryo <- FindVariableFeatures(embryo, nfeatures = 2000)
+embryo <- ScaleData(embryo)
+embryo <- RunPCA(embryo, npcs = 30)
+# Use published cell type labels for benchmarking
+Idents(embryo) <- embryo$cell.type
+```
+
+### wUMAP baseline: weight.none
+
+```{r embryo-baseline, warning=TRUE, message=TRUE}
+embryo <- RunWeightedNeighbors(embryo, dims = 1:30, weight.by = "none", prefix = "wt.none")
+embryo <- FindClusters(embryo, graph.name = "wt.none_snn", cluster.name = "wt.none_clusters", resolution = 0.8, verbose = FALSE)
+```
+
+### wUMAP (stdev weighting)
+
+```{r embryo-wumap, warning=TRUE, message=TRUE}
+embryo <- RunWeightedNeighbors(embryo, dims = 1:30, weight.by = "stdev", prefix = "wt.stdev")
+embryo <- FindClusters(embryo, graph.name = "wt.stdev_snn", cluster.name = "wt.stdev_clusters", resolution = 0.8, verbose = FALSE)
+```
+
+### UMAP embedding
+
+```{r embryo-umap, warning=TRUE, message=TRUE}
+set.seed(42)
+embryo <- RunUMAP(embryo, dims = 1:30, reduction.name = "umap")
+```
+
+### Visualization
+
+```{r embryo-umap-plot, fig.height=7}
+p1 <- DimPlot(embryo, reduction = "umap", group.by = "wt.none_clusters", label = TRUE) +
+  ggtitle("wUMAP weight.none (standard)") + NoLegend()
+p2 <- DimPlot(embryo, reduction = "umap", group.by = "wt.stdev_clusters", label = TRUE) +
+  ggtitle("wUMAP stdev") + NoLegend()
+p1 | p2
+```
+
+### Quantitative comparison
+
+```{r embryo-ari}
+library(mclust)
+ari_none  <- adjustedRandIndex(embryo$cell.type, embryo$wt.none_clusters)
+ari_stdev <- adjustedRandIndex(embryo$cell.type, embryo$wt.stdev_clusters)
+data.frame(Method = c("wUMAP weight.none", "wUMAP stdev"),
+           ARI = c(ari_none, ari_stdev))
+```
+
+### Interpretation
+
+On this trajectory dataset, compare the ARI and visual separation of cell types between standard UMAP and wUMAP. If wUMAP better preserves the developmental trajectory or improves ARI, it supports the claim. Otherwise, the benefit may be context-dependent.
