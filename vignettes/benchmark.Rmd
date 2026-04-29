@@ -742,42 +742,83 @@ Idents(embryo) <- embryo$cell.type
 ### wUMAP baseline: weight.none
 
 ```{r embryo-baseline, warning=TRUE, message=TRUE}
-embryo <- RunWeightedNeighbors(embryo, dims = 1:30, weight.by = "none", prefix = "wt.none")
-embryo <- FindClusters(embryo, graph.name = "wt.none_snn", cluster.name = "wt.none_clusters", resolution = 0.8, verbose = FALSE)
+embryo <- RunWeightedNeighbors(embryo, dims = 1:30, weight.by = "none",
+                               reduction.name = "wt.none.pca",
+                               prefix = "wt.none")
+embryo <- FindClusters(embryo, graph.name = "wt.none_snn",
+                       cluster.name = "wt.none_clusters",
+                       resolution = 0.8, verbose = FALSE)
+embryo <- RunWeightedUMAP(embryo, graph = "wt.none_nn",
+                          reduction.name = "umap.none",
+                          seed.use = 42)
 ```
 
 ### wUMAP (stdev weighting)
 
 ```{r embryo-wumap, warning=TRUE, message=TRUE}
-embryo <- RunWeightedNeighbors(embryo, dims = 1:30, weight.by = "stdev", prefix = "wt.stdev")
-embryo <- FindClusters(embryo, graph.name = "wt.stdev_snn", cluster.name = "wt.stdev_clusters", resolution = 0.8, verbose = FALSE)
+embryo <- RunWeightedNeighbors(embryo, dims = 1:30, weight.by = "stdev",
+                               reduction.name = "wt.stdev.pca",
+                               prefix = "wt.stdev")
+embryo <- FindClusters(embryo, graph.name = "wt.stdev_snn",
+                       cluster.name = "wt.stdev_clusters",
+                       resolution = 0.8, verbose = FALSE)
+embryo <- RunWeightedUMAP(embryo, graph = "wt.stdev_nn",
+                          reduction.name = "umap.stdev",
+                          seed.use = 42)
 ```
 
-### UMAP embedding
+### Local PCA UMAP
 
-```{r embryo-umap, warning=TRUE, message=TRUE}
-set.seed(42)
-embryo <- RunUMAP(embryo, dims = 1:30, reduction.name = "umap")
+```{r embryo-lp, warning=TRUE, message=TRUE}
+embryo <- RunLocalPCANeighbors(embryo, dims = 1:30, k.param = 30,
+                               local.weight.by = "none",
+                               prefix = "lp.none")
+embryo <- FindClusters(embryo, graph.name = "lp.none_snn",
+                       cluster.name = "lp.none_clusters",
+                       resolution = 0.8, verbose = FALSE)
+embryo <- RunLocalPCAUMAP(embryo, dims = 1:30, k.param = 30,
+                          local.weight.by = "none",
+                          reduction.name = "umap.lp.none",
+                          seed.use = 42)
+
+embryo <- RunLocalPCANeighbors(embryo, dims = 1:30, k.param = 30,
+                               local.weight.by = "stdev",
+                               prefix = "lp.stdev")
+embryo <- FindClusters(embryo, graph.name = "lp.stdev_snn",
+                       cluster.name = "lp.stdev_clusters",
+                       resolution = 0.8, verbose = FALSE)
+embryo <- RunLocalPCAUMAP(embryo, dims = 1:30, k.param = 30,
+                          local.weight.by = "stdev",
+                          reduction.name = "umap.lp.stdev",
+                          seed.use = 42)
 ```
 
 ### Visualization
 
-```{r embryo-umap-plot, fig.height=7}
-p1 <- DimPlot(embryo, reduction = "umap", group.by = "wt.none_clusters", label = TRUE) +
-  ggtitle("wUMAP weight.none (standard)") + NoLegend()
-p2 <- DimPlot(embryo, reduction = "umap", group.by = "wt.stdev_clusters", label = TRUE) +
+```{r embryo-umap-plot, fig.height=10}
+p1 <- DimPlot(embryo, reduction = "umap.none", group.by = "wt.none_clusters", label = TRUE) +
+  ggtitle("wUMAP weight.none") + NoLegend()
+p2 <- DimPlot(embryo, reduction = "umap.stdev", group.by = "wt.stdev_clusters", label = TRUE) +
   ggtitle("wUMAP stdev") + NoLegend()
-p1 | p2
+p3 <- DimPlot(embryo, reduction = "umap.lp.none", group.by = "lp.none_clusters", label = TRUE) +
+  ggtitle("Local PCA none") + NoLegend()
+p4 <- DimPlot(embryo, reduction = "umap.lp.stdev", group.by = "lp.stdev_clusters", label = TRUE) +
+  ggtitle("Local PCA stdev") + NoLegend()
+wrap_plots(p1, p2, p3, p4, ncol = 2)
 ```
 
 ### Quantitative comparison
 
 ```{r embryo-ari}
 library(mclust)
-ari_none  <- adjustedRandIndex(embryo$cell.type, embryo$wt.none_clusters)
-ari_stdev <- adjustedRandIndex(embryo$cell.type, embryo$wt.stdev_clusters)
-data.frame(Method = c("wUMAP weight.none", "wUMAP stdev"),
-           ARI = c(ari_none, ari_stdev))
+ari_none   <- adjustedRandIndex(embryo$cell.type, embryo$wt.none_clusters)
+ari_stdev  <- adjustedRandIndex(embryo$cell.type, embryo$wt.stdev_clusters)
+ari_lpnone <- adjustedRandIndex(embryo$cell.type, embryo$lp.none_clusters)
+ari_lpstdv <- adjustedRandIndex(embryo$cell.type, embryo$lp.stdev_clusters)
+data.frame(
+  Method = c("wUMAP weight.none", "wUMAP stdev", "Local PCA none", "Local PCA stdev"),
+  ARI = c(ari_none, ari_stdev, ari_lpnone, ari_lpstdv)
+)
 ```
 
 ### Interpretation

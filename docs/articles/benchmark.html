@@ -1025,61 +1025,155 @@ contains a developmental trajectory across worm embryo stages.</p>
 <h3 id="wumap-baseline-weight-none">wUMAP baseline: weight.none<a class="anchor" aria-label="anchor" href="#wumap-baseline-weight-none"></a>
 </h3>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">embryo</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunWeightedNeighbors.html">RunWeightedNeighbors</a></span><span class="op">(</span><span class="va">embryo</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, weight.by <span class="op">=</span> <span class="st">"none"</span>, prefix <span class="op">=</span> <span class="st">"wt.none"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">embryo</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunWeightedNeighbors.html">RunWeightedNeighbors</a></span><span class="op">(</span><span class="va">embryo</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, weight.by <span class="op">=</span> <span class="st">"none"</span>,</span>
+<span>                               reduction.name <span class="op">=</span> <span class="st">"wt.none.pca"</span>,</span>
+<span>                               prefix <span class="op">=</span> <span class="st">"wt.none"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [wUMAP] Weight scheme : none (factor = 1)</span></span>
 <span><span class="co">#&gt; [wUMAP] Dimensions    : 30 (dims 1–30)</span></span>
 <span><span class="co">#&gt; [wUMAP] Weights       : PC1=1, PC2=1, PC3=1, PC4=1, PC5=1, PC6=1, PC7=1, PC8=1, PC9=1, PC10=1, ...</span></span>
-<span><span class="co">#&gt; [wUMAP] Stored weighted embeddings as 'wt.pca'</span></span>
-<span><span class="co">#&gt; [wUMAP] Running FindNeighbors (k = 20) on 'wt.pca'</span></span>
+<span><span class="co">#&gt; [wUMAP] Stored weighted embeddings as 'wt.none.pca'</span></span>
+<span><span class="co">#&gt; [wUMAP] Running FindNeighbors (k = 20) on 'wt.none.pca'</span></span>
 <span><span class="co">#&gt; Computing nearest neighbor graph</span></span>
 <span><span class="co">#&gt; Computing SNN</span></span>
-<span><span class="va">embryo</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">embryo</span>, graph.name <span class="op">=</span> <span class="st">"wt.none_snn"</span>, cluster.name <span class="op">=</span> <span class="st">"wt.none_clusters"</span>, resolution <span class="op">=</span> <span class="fl">0.8</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">embryo</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">embryo</span>, graph.name <span class="op">=</span> <span class="st">"wt.none_snn"</span>,</span>
+<span>                       cluster.name <span class="op">=</span> <span class="st">"wt.none_clusters"</span>,</span>
+<span>                       resolution <span class="op">=</span> <span class="fl">0.8</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">embryo</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunWeightedUMAP.html">RunWeightedUMAP</a></span><span class="op">(</span><span class="va">embryo</span>, graph <span class="op">=</span> <span class="st">"wt.none_nn"</span>,</span>
+<span>                          reduction.name <span class="op">=</span> <span class="st">"umap.none"</span>,</span>
+<span>                          seed.use <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [wUMAP] Using weighted embedding 'wt.none.pca' (6188 cells x 30 dims, k = 30)</span></span>
+<span><span class="co">#&gt; 10:31:05 UMAP embedding parameters a = 0.9922 b = 1.112</span></span>
+<span><span class="co">#&gt; 10:31:05 Read 6188 rows and found 30 numeric columns</span></span>
+<span><span class="co">#&gt; 10:31:05 Using Annoy for neighbor search, n_neighbors = 30</span></span>
+<span><span class="co">#&gt; 10:31:05 Building Annoy index with metric = euclidean, n_trees = 50</span></span>
+<span><span class="co">#&gt; 0%   10   20   30   40   50   60   70   80   90   100%</span></span>
+<span><span class="co">#&gt; [----|----|----|----|----|----|----|----|----|----|</span></span>
+<span><span class="co">#&gt; **************************************************|</span></span>
+<span><span class="co">#&gt; 10:31:05 Writing NN index file to temp file /var/folders/b9/bldjd_1s567761v6zm1g7v380000gp/T//RtmpDOxCzM/file1287e8f5660d</span></span>
+<span><span class="co">#&gt; 10:31:05 Searching Annoy index using 4 threads, search_k = 3000</span></span>
+<span><span class="co">#&gt; 10:31:05 Annoy recall = 100%</span></span>
+<span><span class="co">#&gt; 10:31:05 Commencing smooth kNN distance calibration using 4 threads with target n_neighbors = 30</span></span>
+<span><span class="co">#&gt; 10:31:06 Initializing from normalized Laplacian + noise (using RSpectra)</span></span>
+<span><span class="co">#&gt; 10:31:06 Commencing optimization for 500 epochs, with 241652 positive edges</span></span>
+<span><span class="co">#&gt; 10:31:06 Using rng type: pcg</span></span>
+<span><span class="co">#&gt; 10:31:11 Optimization finished</span></span>
+<span><span class="co">#&gt; [wUMAP] Stored as reduction 'umap.none'. Access via Embeddings(object[['umap.none']]).</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="wumap-stdev-weighting">wUMAP (stdev weighting)<a class="anchor" aria-label="anchor" href="#wumap-stdev-weighting"></a>
 </h3>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">embryo</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunWeightedNeighbors.html">RunWeightedNeighbors</a></span><span class="op">(</span><span class="va">embryo</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, weight.by <span class="op">=</span> <span class="st">"stdev"</span>, prefix <span class="op">=</span> <span class="st">"wt.stdev"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">embryo</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunWeightedNeighbors.html">RunWeightedNeighbors</a></span><span class="op">(</span><span class="va">embryo</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, weight.by <span class="op">=</span> <span class="st">"stdev"</span>,</span>
+<span>                               reduction.name <span class="op">=</span> <span class="st">"wt.stdev.pca"</span>,</span>
+<span>                               prefix <span class="op">=</span> <span class="st">"wt.stdev"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [wUMAP] Weight scheme : stdev (factor = 1)</span></span>
 <span><span class="co">#&gt; [wUMAP] Dimensions    : 30 (dims 1–30)</span></span>
 <span><span class="co">#&gt; [wUMAP] Weights       : PC1=0.0975, PC2=0.0616, PC3=0.0568, PC4=0.0486, PC5=0.0418, PC6=0.041, PC7=0.0378, PC8=0.0358, PC9=0.0354, PC10=0.0347, ...</span></span>
-<span><span class="co">#&gt; [wUMAP] Stored weighted embeddings as 'wt.pca'</span></span>
-<span><span class="co">#&gt; [wUMAP] Running FindNeighbors (k = 20) on 'wt.pca'</span></span>
+<span><span class="co">#&gt; Warning: Key 'wtPCA_' taken, using 'wtstdevpca_' instead</span></span>
+<span><span class="co">#&gt; [wUMAP] Stored weighted embeddings as 'wt.stdev.pca'</span></span>
+<span><span class="co">#&gt; [wUMAP] Running FindNeighbors (k = 20) on 'wt.stdev.pca'</span></span>
 <span><span class="co">#&gt; Computing nearest neighbor graph</span></span>
 <span><span class="co">#&gt; Computing SNN</span></span>
-<span><span class="va">embryo</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">embryo</span>, graph.name <span class="op">=</span> <span class="st">"wt.stdev_snn"</span>, cluster.name <span class="op">=</span> <span class="st">"wt.stdev_clusters"</span>, resolution <span class="op">=</span> <span class="fl">0.8</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="umap-embedding">UMAP embedding<a class="anchor" aria-label="anchor" href="#umap-embedding"></a>
-</h3>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
-<span><span class="va">embryo</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/RunUMAP.html" class="external-link">RunUMAP</a></span><span class="op">(</span><span class="va">embryo</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, reduction.name <span class="op">=</span> <span class="st">"umap"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; 16:22:11 UMAP embedding parameters a = 0.9922 b = 1.112</span></span>
-<span><span class="co">#&gt; 16:22:11 Read 6188 rows and found 30 numeric columns</span></span>
-<span><span class="co">#&gt; 16:22:11 Using Annoy for neighbor search, n_neighbors = 30</span></span>
-<span><span class="co">#&gt; 16:22:11 Building Annoy index with metric = cosine, n_trees = 50</span></span>
+<span><span class="va">embryo</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">embryo</span>, graph.name <span class="op">=</span> <span class="st">"wt.stdev_snn"</span>,</span>
+<span>                       cluster.name <span class="op">=</span> <span class="st">"wt.stdev_clusters"</span>,</span>
+<span>                       resolution <span class="op">=</span> <span class="fl">0.8</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">embryo</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunWeightedUMAP.html">RunWeightedUMAP</a></span><span class="op">(</span><span class="va">embryo</span>, graph <span class="op">=</span> <span class="st">"wt.stdev_nn"</span>,</span>
+<span>                          reduction.name <span class="op">=</span> <span class="st">"umap.stdev"</span>,</span>
+<span>                          seed.use <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [wUMAP] Using weighted embedding 'wt.stdev.pca' (6188 cells x 30 dims, k = 30)</span></span>
+<span><span class="co">#&gt; 10:31:12 UMAP embedding parameters a = 0.9922 b = 1.112</span></span>
+<span><span class="co">#&gt; 10:31:12 Read 6188 rows and found 30 numeric columns</span></span>
+<span><span class="co">#&gt; 10:31:12 Using Annoy for neighbor search, n_neighbors = 30</span></span>
+<span><span class="co">#&gt; 10:31:12 Building Annoy index with metric = euclidean, n_trees = 50</span></span>
 <span><span class="co">#&gt; 0%   10   20   30   40   50   60   70   80   90   100%</span></span>
 <span><span class="co">#&gt; [----|----|----|----|----|----|----|----|----|----|</span></span>
 <span><span class="co">#&gt; **************************************************|</span></span>
-<span><span class="co">#&gt; 16:22:12 Writing NN index file to temp file /var/folders/b9/bldjd_1s567761v6zm1g7v380000gp/T//Rtmp4BlXFK/filefb5f35b5029c</span></span>
-<span><span class="co">#&gt; 16:22:12 Searching Annoy index using 1 thread, search_k = 3000</span></span>
-<span><span class="co">#&gt; 16:22:12 Annoy recall = 100%</span></span>
-<span><span class="co">#&gt; 16:22:13 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30</span></span>
-<span><span class="co">#&gt; 16:22:13 Initializing from normalized Laplacian + noise (using RSpectra)</span></span>
-<span><span class="co">#&gt; 16:22:13 Commencing optimization for 500 epochs, with 244672 positive edges</span></span>
-<span><span class="co">#&gt; 16:22:13 Using rng type: pcg</span></span>
-<span><span class="co">#&gt; 16:22:18 Optimization finished</span></span></code></pre></div>
+<span><span class="co">#&gt; 10:31:12 Writing NN index file to temp file /var/folders/b9/bldjd_1s567761v6zm1g7v380000gp/T//RtmpDOxCzM/file1287e52a4247f</span></span>
+<span><span class="co">#&gt; 10:31:12 Searching Annoy index using 4 threads, search_k = 3000</span></span>
+<span><span class="co">#&gt; 10:31:12 Annoy recall = 100%</span></span>
+<span><span class="co">#&gt; 10:31:13 Commencing smooth kNN distance calibration using 4 threads with target n_neighbors = 30</span></span>
+<span><span class="co">#&gt; 10:31:13 Initializing from normalized Laplacian + noise (using RSpectra)</span></span>
+<span><span class="co">#&gt; 10:31:13 Commencing optimization for 500 epochs, with 233928 positive edges</span></span>
+<span><span class="co">#&gt; 10:31:13 Using rng type: pcg</span></span>
+<span><span class="co">#&gt; 10:31:18 Optimization finished</span></span>
+<span><span class="co">#&gt; Warning: Key 'wtUMAP_' taken, using 'umapstdev_' instead</span></span>
+<span><span class="co">#&gt; [wUMAP] Stored as reduction 'umap.stdev'. Access via Embeddings(object[['umap.stdev']]).</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="local-pca-umap-1">Local PCA UMAP<a class="anchor" aria-label="anchor" href="#local-pca-umap-1"></a>
+</h3>
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">embryo</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunLocalPCANeighbors.html">RunLocalPCANeighbors</a></span><span class="op">(</span><span class="va">embryo</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="fl">30</span>,</span>
+<span>                               local.weight.by <span class="op">=</span> <span class="st">"none"</span>,</span>
+<span>                               prefix <span class="op">=</span> <span class="st">"lp.none"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [wUMAP] RunLocalPCANeighbors: 6188 cells x 30 dims, k = 30, local.dims = 30, local.weight.by = 'none', mp.filter = FALSE</span></span>
+<span><span class="co">#&gt; [wUMAP] Step 1: finding global k-NN ...</span></span>
+<span><span class="co">#&gt; [wUMAP] Step 2: computing local PCA distances ...</span></span>
+<span><span class="co">#&gt; [wUMAP] Building KNN graph ...</span></span>
+<span><span class="co">#&gt; [wUMAP] Building SNN graph (Jaccard) ...</span></span>
+<span><span class="co">#&gt; [wUMAP] Stored graphs 'lp.none_nn' and 'lp.none_snn'.</span></span>
+<span><span class="va">embryo</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">embryo</span>, graph.name <span class="op">=</span> <span class="st">"lp.none_snn"</span>,</span>
+<span>                       cluster.name <span class="op">=</span> <span class="st">"lp.none_clusters"</span>,</span>
+<span>                       resolution <span class="op">=</span> <span class="fl">0.8</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">embryo</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunLocalPCAUMAP.html">RunLocalPCAUMAP</a></span><span class="op">(</span><span class="va">embryo</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="fl">30</span>,</span>
+<span>                          local.weight.by <span class="op">=</span> <span class="st">"none"</span>,</span>
+<span>                          reduction.name <span class="op">=</span> <span class="st">"umap.lp.none"</span>,</span>
+<span>                          seed.use <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [wUMAP] RunLocalPCAUMAP: 6188 cells x 30 dims, k = 30, local.dims = 30, local.weight.by = 'none', mp.filter = FALSE</span></span>
+<span><span class="co">#&gt; [wUMAP] Step 1: finding global k-NN ...</span></span>
+<span><span class="co">#&gt; [wUMAP] Step 2: computing local PCA distances ...</span></span>
+<span><span class="co">#&gt; [wUMAP] Step 3/3: running UMAP on local PCA graph ...</span></span>
+<span><span class="co">#&gt; 10:31:23 UMAP embedding parameters a = 0.9922 b = 1.112</span></span>
+<span><span class="co">#&gt; 10:31:24 Commencing smooth kNN distance calibration using 4 threads with target n_neighbors = 30</span></span>
+<span><span class="co">#&gt; 10:31:24 Initializing from normalized Laplacian + noise (using RSpectra)</span></span>
+<span><span class="co">#&gt; 10:31:24 Commencing optimization for 500 epochs, with 250568 positive edges</span></span>
+<span><span class="co">#&gt; 10:31:24 Using rng type: pcg</span></span>
+<span><span class="co">#&gt; 10:31:30 Optimization finished</span></span>
+<span><span class="co">#&gt; [wUMAP] Stored as reduction 'umap.lp.none'.</span></span>
+<span></span>
+<span><span class="va">embryo</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunLocalPCANeighbors.html">RunLocalPCANeighbors</a></span><span class="op">(</span><span class="va">embryo</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="fl">30</span>,</span>
+<span>                               local.weight.by <span class="op">=</span> <span class="st">"stdev"</span>,</span>
+<span>                               prefix <span class="op">=</span> <span class="st">"lp.stdev"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [wUMAP] RunLocalPCANeighbors: 6188 cells x 30 dims, k = 30, local.dims = 30, local.weight.by = 'stdev', mp.filter = FALSE</span></span>
+<span><span class="co">#&gt; [wUMAP] Step 1: finding global k-NN ...</span></span>
+<span><span class="co">#&gt; [wUMAP] Step 2: computing local PCA distances ...</span></span>
+<span><span class="co">#&gt; [wUMAP] Building KNN graph ...</span></span>
+<span><span class="co">#&gt; [wUMAP] Building SNN graph (Jaccard) ...</span></span>
+<span><span class="co">#&gt; [wUMAP] Stored graphs 'lp.stdev_nn' and 'lp.stdev_snn'.</span></span>
+<span><span class="va">embryo</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">embryo</span>, graph.name <span class="op">=</span> <span class="st">"lp.stdev_snn"</span>,</span>
+<span>                       cluster.name <span class="op">=</span> <span class="st">"lp.stdev_clusters"</span>,</span>
+<span>                       resolution <span class="op">=</span> <span class="fl">0.8</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">embryo</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RunLocalPCAUMAP.html">RunLocalPCAUMAP</a></span><span class="op">(</span><span class="va">embryo</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, k.param <span class="op">=</span> <span class="fl">30</span>,</span>
+<span>                          local.weight.by <span class="op">=</span> <span class="st">"stdev"</span>,</span>
+<span>                          reduction.name <span class="op">=</span> <span class="st">"umap.lp.stdev"</span>,</span>
+<span>                          seed.use <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [wUMAP] RunLocalPCAUMAP: 6188 cells x 30 dims, k = 30, local.dims = 30, local.weight.by = 'stdev', mp.filter = FALSE</span></span>
+<span><span class="co">#&gt; [wUMAP] Step 1: finding global k-NN ...</span></span>
+<span><span class="co">#&gt; [wUMAP] Step 2: computing local PCA distances ...</span></span>
+<span><span class="co">#&gt; [wUMAP] Step 3/3: running UMAP on local PCA graph ...</span></span>
+<span><span class="co">#&gt; 10:31:35 UMAP embedding parameters a = 0.9922 b = 1.112</span></span>
+<span><span class="co">#&gt; 10:31:35 Commencing smooth kNN distance calibration using 4 threads with target n_neighbors = 30</span></span>
+<span><span class="co">#&gt; 10:31:35 446 smooth knn distance failures</span></span>
+<span><span class="co">#&gt; 10:31:36 Initializing from normalized Laplacian + noise (using RSpectra)</span></span>
+<span><span class="co">#&gt; 10:31:36 Commencing optimization for 500 epochs, with 231866 positive edges</span></span>
+<span><span class="co">#&gt; 10:31:36 Using rng type: pcg</span></span>
+<span><span class="co">#&gt; 10:31:42 Optimization finished</span></span>
+<span><span class="co">#&gt; Warning: Key 'lpUMAP_' taken, using 'umaplpstdev_' instead</span></span>
+<span><span class="co">#&gt; [wUMAP] Stored as reduction 'umap.lp.stdev'.</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="visualization">Visualization<a class="anchor" aria-label="anchor" href="#visualization"></a>
 </h3>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">p1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">embryo</span>, reduction <span class="op">=</span> <span class="st">"umap"</span>, group.by <span class="op">=</span> <span class="st">"wt.none_clusters"</span>, label <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"wUMAP weight.none (standard)"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="va">p2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">embryo</span>, reduction <span class="op">=</span> <span class="st">"umap"</span>, group.by <span class="op">=</span> <span class="st">"wt.stdev_clusters"</span>, label <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
+<code class="sourceCode R"><span><span class="va">p1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">embryo</span>, reduction <span class="op">=</span> <span class="st">"umap.none"</span>, group.by <span class="op">=</span> <span class="st">"wt.none_clusters"</span>, label <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"wUMAP weight.none"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">p2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">embryo</span>, reduction <span class="op">=</span> <span class="st">"umap.stdev"</span>, group.by <span class="op">=</span> <span class="st">"wt.stdev_clusters"</span>, label <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"wUMAP stdev"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="va">p1</span> <span class="op">|</span> <span class="va">p2</span></span></code></pre></div>
+<span><span class="va">p3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">embryo</span>, reduction <span class="op">=</span> <span class="st">"umap.lp.none"</span>, group.by <span class="op">=</span> <span class="st">"lp.none_clusters"</span>, label <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Local PCA none"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">p4</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">embryo</span>, reduction <span class="op">=</span> <span class="st">"umap.lp.stdev"</span>, group.by <span class="op">=</span> <span class="st">"lp.stdev_clusters"</span>, label <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Local PCA stdev"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SeuratTheme.html" class="external-link">NoLegend</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://patchwork.data-imaginist.com/reference/wrap_plots.html" class="external-link">wrap_plots</a></span><span class="op">(</span><span class="va">p1</span>, <span class="va">p2</span>, <span class="va">p3</span>, <span class="va">p4</span>, ncol <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
 <p><img src="benchmark_files/figure-html/embryo-umap-plot-1.png" class="r-plt" alt="" width="1500"></p>
 </div>
 <div class="section level3">
@@ -1087,13 +1181,19 @@ contains a developmental trajectory across worm embryo stages.</p>
 </h3>
 <div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mclust-org.github.io/mclust/" class="external-link">mclust</a></span><span class="op">)</span></span>
-<span><span class="va">ari_none</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://mclust-org.github.io/mclust/reference/adjustedRandIndex.html" class="external-link">adjustedRandIndex</a></span><span class="op">(</span><span class="va">embryo</span><span class="op">$</span><span class="va">cell.type</span>, <span class="va">embryo</span><span class="op">$</span><span class="va">wt.none_clusters</span><span class="op">)</span></span>
-<span><span class="va">ari_stdev</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://mclust-org.github.io/mclust/reference/adjustedRandIndex.html" class="external-link">adjustedRandIndex</a></span><span class="op">(</span><span class="va">embryo</span><span class="op">$</span><span class="va">cell.type</span>, <span class="va">embryo</span><span class="op">$</span><span class="va">wt.stdev_clusters</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>Method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"wUMAP weight.none"</span>, <span class="st">"wUMAP stdev"</span><span class="op">)</span>,</span>
-<span>           ARI <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">ari_none</span>, <span class="va">ari_stdev</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">ari_none</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://mclust-org.github.io/mclust/reference/adjustedRandIndex.html" class="external-link">adjustedRandIndex</a></span><span class="op">(</span><span class="va">embryo</span><span class="op">$</span><span class="va">cell.type</span>, <span class="va">embryo</span><span class="op">$</span><span class="va">wt.none_clusters</span><span class="op">)</span></span>
+<span><span class="va">ari_stdev</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://mclust-org.github.io/mclust/reference/adjustedRandIndex.html" class="external-link">adjustedRandIndex</a></span><span class="op">(</span><span class="va">embryo</span><span class="op">$</span><span class="va">cell.type</span>, <span class="va">embryo</span><span class="op">$</span><span class="va">wt.stdev_clusters</span><span class="op">)</span></span>
+<span><span class="va">ari_lpnone</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://mclust-org.github.io/mclust/reference/adjustedRandIndex.html" class="external-link">adjustedRandIndex</a></span><span class="op">(</span><span class="va">embryo</span><span class="op">$</span><span class="va">cell.type</span>, <span class="va">embryo</span><span class="op">$</span><span class="va">lp.none_clusters</span><span class="op">)</span></span>
+<span><span class="va">ari_lpstdv</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://mclust-org.github.io/mclust/reference/adjustedRandIndex.html" class="external-link">adjustedRandIndex</a></span><span class="op">(</span><span class="va">embryo</span><span class="op">$</span><span class="va">cell.type</span>, <span class="va">embryo</span><span class="op">$</span><span class="va">lp.stdev_clusters</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  Method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"wUMAP weight.none"</span>, <span class="st">"wUMAP stdev"</span>, <span class="st">"Local PCA none"</span>, <span class="st">"Local PCA stdev"</span><span class="op">)</span>,</span>
+<span>  ARI <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">ari_none</span>, <span class="va">ari_stdev</span>, <span class="va">ari_lpnone</span>, <span class="va">ari_lpstdv</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
 <span><span class="co">#&gt;              Method       ARI</span></span>
 <span><span class="co">#&gt; 1 wUMAP weight.none 0.6177728</span></span>
-<span><span class="co">#&gt; 2       wUMAP stdev 0.5062476</span></span></code></pre></div>
+<span><span class="co">#&gt; 2       wUMAP stdev 0.5062476</span></span>
+<span><span class="co">#&gt; 3    Local PCA none 0.6218841</span></span>
+<span><span class="co">#&gt; 4   Local PCA stdev 0.6218841</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="interpretation-1">Interpretation<a class="anchor" aria-label="anchor" href="#interpretation-1"></a>
