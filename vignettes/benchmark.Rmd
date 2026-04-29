@@ -569,7 +569,7 @@ ggplot(res_long[!is.na(res_long$Score), ],
   geom_hline(data = baseline, aes(yintercept = Score),
              linetype = "dashed", colour = "grey40") +
   facet_wrap(~Metric, scales = "free_y") +
-  scale_fill_brewer(palette = "Set2") +
+  scale_fill_viridis_d(option = "C") +
   coord_flip() +
   labs(x = NULL, y = NULL,
        title = "wUMAP benchmark on cbmc CITE-seq",
