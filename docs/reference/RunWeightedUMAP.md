@@ -1,8 +1,10 @@
-# Run Variance-Weighted UMAP on a Seurat Object
+# Run PC-Weighted UMAP on a Seurat Object
 
-Scales each principal component embedding by a weight derived from the
-variance explained by that component, then runs UMAP via uwot. The
-result is stored as a new `DimReduc` in the returned Seurat object.
+Runs UMAP via uwot with an optionally modified PC-space distance: each
+principal component axis can be scaled by a variance-derived weight
+(heuristic) and/or noise PCs can be zeroed by the Marchenko-Pastur
+criterion (`mp.filter`). The result is stored as a new `DimReduc` in the
+returned Seurat object.
 
 ## Usage
 
@@ -53,9 +55,8 @@ RunWeightedUMAP(
   `"stdev"`
 
   :   Standard deviation, normalised (`sdev / sum(sdev)`). Default.
-      Gently up-weights early PCs while keeping intermediate ones in
-      play, giving a good balance between signal emphasis and layout
-      completeness.
+      Mildest transformation — early PCs receive somewhat more weight.
+      Whether this improves results is dataset-dependent.
 
   `"prop.var"`
 
@@ -169,3 +170,33 @@ appended. The `misc` slot of this reduction stores:
 - `source.reduction` — name of the source reduction
 
 - `dims.used` — integer vector of dimensions used
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+library(Seurat)
+library(wUMAP)
+library(patchwork)
+
+# Assumes pbmc has PCA already run
+
+# Weighted UMAP — PCs scaled by standard deviation (default, recommended)
+pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, reduction.name = "wt.umap")
+
+# Standard UMAP for comparison — all PCs weighted equally
+pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, weight.by = "none",
+                        reduction.name = "umap.std")
+
+# MP filtering: zero out noise PCs, then apply stdev weights to signal PCs
+pbmc <- RunWeightedUMAP(pbmc, dims = 1:30, mp.filter = TRUE,
+                        reduction.name = "wt.umap.mp")
+
+# Compare standard vs weighted
+p1 <- DimPlot(pbmc, reduction = "umap.std", label = TRUE) +
+  ggtitle("Standard UMAP")
+p2 <- DimPlot(pbmc, reduction = "wt.umap",  label = TRUE) +
+  ggtitle("Weighted UMAP (stdev)")
+p1 | p2
+} # }
+```

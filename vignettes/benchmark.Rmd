@@ -807,6 +807,33 @@ p4 <- DimPlot(embryo, reduction = "umap.lp.stdev", group.by = "lp.stdev_clusters
 wrap_plots(p1, p2, p3, p4, ncol = 2)
 ```
 
+### Differentiation stage on embryo UMAPs
+
+```{r embryo-differentiation, fig.height=10}
+# Colour by developmental time bins and by continuous embryo time
+p1 <- DimPlot(embryo, reduction = "umap.none", group.by = "embryo.time.bin",
+              label = FALSE) + ggtitle("wUMAP weight.none") + NoLegend()
+p2 <- DimPlot(embryo, reduction = "umap.stdev", group.by = "embryo.time.bin",
+              label = FALSE) + ggtitle("wUMAP stdev") + NoLegend()
+p3 <- DimPlot(embryo, reduction = "umap.lp.none", group.by = "embryo.time.bin",
+              label = FALSE) + ggtitle("Local PCA none") + NoLegend()
+p4 <- DimPlot(embryo, reduction = "umap.lp.stdev", group.by = "embryo.time.bin",
+              label = FALSE) + ggtitle("Local PCA stdev") + NoLegend()
+wrap_plots(p1, p2, p3, p4, ncol = 2)
+```
+
+```{r embryo-differentiation-continuous, fig.height=10}
+p1 <- FeaturePlot(embryo, features = "embryo.time", reduction = "umap.none",
+                  pt.size = 0.5) + ggtitle("wUMAP weight.none")
+p2 <- FeaturePlot(embryo, features = "embryo.time", reduction = "umap.stdev",
+                  pt.size = 0.5) + ggtitle("wUMAP stdev")
+p3 <- FeaturePlot(embryo, features = "embryo.time", reduction = "umap.lp.none",
+                  pt.size = 0.5) + ggtitle("Local PCA none")
+p4 <- FeaturePlot(embryo, features = "embryo.time", reduction = "umap.lp.stdev",
+                  pt.size = 0.5) + ggtitle("Local PCA stdev")
+wrap_plots(p1, p2, p3, p4, ncol = 2)
+```
+
 ### Quantitative comparison
 
 ```{r embryo-ari}

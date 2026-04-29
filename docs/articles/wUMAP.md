@@ -1,16 +1,45 @@
-# Variance-Weighted UMAP with wUMAP
+# PC-Distance Modification for UMAP with wUMAP
 
 ## Overview
 
-Standard UMAP treats every principal component (PC) equally. In
-scRNA-seq, early PCs capture far more biological variation than later
-ones — yet a standard UMAP over PCs 1–50 weights PC 50 the same as PC 1.
+When running UMAP on PCA coordinates, every PC is given equal weight in
+the Euclidean distance. This is a reasonable default, but there are two
+distinct situations where modifying the input metric may be worth
+trying:
 
-**wUMAP** scales each PC axis by a weight derived from its variance
-contribution before handing the embedding to UMAP, so biologically
-informative PCs dominate cell distances in the final layout. The
-recommended default scheme is `weight.by = "stdev"`, which gently
-up-weights early PCs while keeping intermediate ones in play.
+**1. Noisy late PCs deserve less weight — or none at all.** PCA orders
+components by variance, so later PCs contain progressively less signal
+and more technical noise. Passing `dims = 1:30` to
+[`RunUMAP()`](https://satijalab.org/seurat/reference/RunUMAP.html)
+already addresses this coarsely by discarding the noisiest PCs. The
+`mp.filter = TRUE` flag refines this by applying the
+**Marchenko-Pastur** law from random matrix theory, which gives a
+data-driven cutoff $`\lambda_{\max} = (1 + \sqrt{p/n})^2`$ — PCs whose
+variance falls below that threshold are zeroed out automatically. This
+is the most principled feature in the package, though it is still an
+approximation (the MP law is exact for i.i.d. Gaussian matrices;
+log-normalised scRNA-seq data violates those assumptions).
+
+**2. Distances within a neighbourhood may be dominated by a single
+direction.** Standard UMAP uses a single global metric.
+[`RunLocalPCAUMAP()`](https://lachland.github.io/weightedUMAP/reference/RunLocalPCAUMAP.md)
+instead measures the distance between each cell and its neighbours in a
+locally-fitted PCA basis, projecting displacements onto the dominant
+directions of variation in that neighbourhood. This has geometric
+motivation for manifold-structured data. Whether it improves clustering
+in practice is dataset-dependent (see the
+[Benchmark](https://lachland.github.io/weightedUMAP/articles/benchmark.md)
+vignette).
+
+**What is purely heuristic:** The global weighting schemes
+`weight.by = "stdev"` and `weight.by = "prop.var"` continuously rescale
+PC coordinates by their variance contribution. Unlike `mp.filter`, these
+are not derived from any statistical threshold — they are dials for
+exploring how much emphasis to place on early PCs. The default
+`weight.by = "stdev"` applies the mildest transformation. If you are
+unsure which to use, start with `mp.filter = TRUE` (principled exclusion
+of noise PCs) and the local PCA approach before experimenting with the
+weighting dials.
 
 ## Setup
 
@@ -74,7 +103,7 @@ Three schemes are available via `weight.by`:
 
 | Value | Weight formula | Effect |
 |----|----|----|
-| `"stdev"` | $`w_i = \sigma_i / \sum \sigma`$ | **Default.** Gentle emphasis on early PCs; keeps intermediate PCs in play. |
+| `"stdev"` | $`w_i = \sigma_i / \sum \sigma`$ | **Default.** Mildest transformation; early PCs weighted slightly more heavily. |
 | `"prop.var"` | $`w_i = \sigma_i^2 / \sum \sigma^2`$ | Stronger up-weighting; use with `weight.factor < 1` on PC-1-dominated data. |
 | `"none"` | $`w_i = 1/d`$ | Standard UMAP (equal weights). |
 
@@ -244,11 +273,14 @@ Clustering and UMAP both derived from the same weighted KNN graph.
 ## Local PCA UMAP
 
 [`RunLocalPCAUMAP()`](https://lachland.github.io/weightedUMAP/reference/RunLocalPCAUMAP.md)
-is a more principled alternative to global variance weighting. Rather
-than rescaling PC axes globally, it measures the distance between every
-pair of neighbours in a **locally-fitted PCA basis** — capturing the
-predominant direction of variation in each cell’s neighbourhood
-(e.g. the tangent of a trajectory) and de-emphasising transverse noise.
+takes a different approach to modifying the input metric. Rather than
+rescaling PC axes globally, it measures the distance between every pair
+of neighbours in a **locally-fitted PCA basis** — projecting
+displacements onto the directions of greatest variance within each
+cell’s neighbourhood. The projection step itself (without any weighting)
+has geometric motivation for manifold-structured data. The optional
+`local.weight.by` re-weighting of local PC directions is an additional
+heuristic layered on top, analogous to the global `weight.by` schemes.
 
 The `local.weight.by` parameter (default `"stdev"`) additionally weights
 each local PC direction by its contribution to local variance, analogous
@@ -307,9 +339,10 @@ p_std | p_lp
 
 Standard UMAP (left) vs local PCA UMAP with stdev weighting (right).
 
-The local PCA approach can reveal trajectory-like structure that is
-compressed in standard UMAP because the distance metric is insensitive
-to the predominant local direction of variation.
+The local PCA approach can sometimes reveal trajectory-like structure
+more clearly than standard UMAP, but on datasets with broadly isotropic
+neighbourhoods the improvement may be small. See the benchmark vignette
+for a quantitative comparison.
 
 ## Further reading
 

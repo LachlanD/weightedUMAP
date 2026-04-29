@@ -5,12 +5,12 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Variance-Weighted UMAP with wUMAP • wUMAP</title>
+<title>PC-Distance Modification for UMAP with wUMAP • wUMAP</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Variance-Weighted UMAP with wUMAP">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="PC-Distance Modification for UMAP with wUMAP">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -55,7 +55,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>Variance-Weighted UMAP with wUMAP</h1>
+      <h1>PC-Distance Modification for UMAP with wUMAP</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/LachlanD/weightedUMAP/blob/HEAD/vignettes/wUMAP.Rmd" class="external-link"><code>vignettes/wUMAP.Rmd</code></a></small>
@@ -67,16 +67,42 @@
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
-<p>Standard UMAP treats every principal component (PC) equally. In
-scRNA-seq, early PCs capture far more biological variation than later
-ones — yet a standard UMAP over PCs 1–50 weights PC 50 the same as PC
-1.</p>
-<p><strong>wUMAP</strong> scales each PC axis by a weight derived from
-its variance contribution before handing the embedding to UMAP, so
-biologically informative PCs dominate cell distances in the final
-layout. The recommended default scheme is
-<code>weight.by = "stdev"</code>, which gently up-weights early PCs
-while keeping intermediate ones in play.</p>
+<p>When running UMAP on PCA coordinates, every PC is given equal weight
+in the Euclidean distance. This is a reasonable default, but there are
+two distinct situations where modifying the input metric may be worth
+trying:</p>
+<p><strong>1. Noisy late PCs deserve less weight — or none at
+all.</strong> PCA orders components by variance, so later PCs contain
+progressively less signal and more technical noise. Passing
+<code>dims = 1:30</code> to <code><a href="https://satijalab.org/seurat/reference/RunUMAP.html" class="external-link">RunUMAP()</a></code> already addresses
+this coarsely by discarding the noisiest PCs. The
+<code>mp.filter = TRUE</code> flag refines this by applying the
+<strong>Marchenko-Pastur</strong> law from random matrix theory, which
+gives a data-driven cutoff
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>λ</mi><mi mathvariant="normal">max</mi></msub><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>+</mo><msqrt><mrow><mi>p</mi><mi>/</mi><mi>n</mi></mrow></msqrt><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\lambda_{\max} = (1 + \sqrt{p/n})^2</annotation></semantics></math>
+— PCs whose variance falls below that threshold are zeroed out
+automatically. This is the most principled feature in the package,
+though it is still an approximation (the MP law is exact for i.i.d.
+Gaussian matrices; log-normalised scRNA-seq data violates those
+assumptions).</p>
+<p><strong>2. Distances within a neighbourhood may be dominated by a
+single direction.</strong> Standard UMAP uses a single global metric.
+<code><a href="../reference/RunLocalPCAUMAP.html">RunLocalPCAUMAP()</a></code> instead measures the distance between
+each cell and its neighbours in a locally-fitted PCA basis, projecting
+displacements onto the dominant directions of variation in that
+neighbourhood. This has geometric motivation for manifold-structured
+data. Whether it improves clustering in practice is dataset-dependent
+(see the <a href="benchmark.html">Benchmark</a> vignette).</p>
+<p><strong>What is purely heuristic:</strong> The global weighting
+schemes <code>weight.by = "stdev"</code> and
+<code>weight.by = "prop.var"</code> continuously rescale PC coordinates
+by their variance contribution. Unlike <code>mp.filter</code>, these are
+not derived from any statistical threshold — they are dials for
+exploring how much emphasis to place on early PCs. The default
+<code>weight.by = "stdev"</code> applies the mildest transformation. If
+you are unsure which to use, start with <code>mp.filter = TRUE</code>
+(principled exclusion of noise PCs) and the local PCA approach before
+experimenting with the weighting dials.</p>
 </div>
 <div class="section level2">
 <h2 id="setup">Setup<a class="anchor" aria-label="anchor" href="#setup"></a>
@@ -146,8 +172,8 @@ Left: standard UMAP. Right: stdev-weighted UMAP.
 <td><code>"stdev"</code></td>
 <td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>w</mi><mi>i</mi></msub><mo>=</mo><msub><mi>σ</mi><mi>i</mi></msub><mi>/</mi><mo>∑</mo><mi>σ</mi></mrow><annotation encoding="application/x-tex">w_i = \sigma_i / \sum \sigma</annotation></semantics></math></td>
 <td>
-<strong>Default.</strong> Gentle emphasis on early PCs; keeps
-intermediate PCs in play.</td>
+<strong>Default.</strong> Mildest transformation; early PCs weighted
+slightly more heavily.</td>
 </tr>
 <tr class="even">
 <td><code>"prop.var"</code></td>
@@ -301,12 +327,16 @@ Clustering and UMAP both derived from the same weighted KNN graph.
 <div class="section level2">
 <h2 id="local-pca-umap">Local PCA UMAP<a class="anchor" aria-label="anchor" href="#local-pca-umap"></a>
 </h2>
-<p><code><a href="../reference/RunLocalPCAUMAP.html">RunLocalPCAUMAP()</a></code> is a more principled alternative to
-global variance weighting. Rather than rescaling PC axes globally, it
+<p><code><a href="../reference/RunLocalPCAUMAP.html">RunLocalPCAUMAP()</a></code> takes a different approach to
+modifying the input metric. Rather than rescaling PC axes globally, it
 measures the distance between every pair of neighbours in a
-<strong>locally-fitted PCA basis</strong> — capturing the predominant
-direction of variation in each cell’s neighbourhood (e.g. the tangent of
-a trajectory) and de-emphasising transverse noise.</p>
+<strong>locally-fitted PCA basis</strong> — projecting displacements
+onto the directions of greatest variance within each cell’s
+neighbourhood. The projection step itself (without any weighting) has
+geometric motivation for manifold-structured data. The optional
+<code>local.weight.by</code> re-weighting of local PC directions is an
+additional heuristic layered on top, analogous to the global
+<code>weight.by</code> schemes.</p>
 <p>The <code>local.weight.by</code> parameter (default
 <code>"stdev"</code>) additionally weights each local PC direction by
 its contribution to local variance, analogous to how
@@ -357,9 +387,10 @@ then <code><a href="../reference/RunLocalPCAUMAP.html">RunLocalPCAUMAP()</a></co
 Standard UMAP (left) vs local PCA UMAP with stdev weighting (right).
 </p>
 </div>
-<p>The local PCA approach can reveal trajectory-like structure that is
-compressed in standard UMAP because the distance metric is insensitive
-to the predominant local direction of variation.</p>
+<p>The local PCA approach can sometimes reveal trajectory-like structure
+more clearly than standard UMAP, but on datasets with broadly isotropic
+neighbourhoods the improvement may be small. See the benchmark vignette
+for a quantitative comparison.</p>
 </div>
 <div class="section level2">
 <h2 id="further-reading">Further reading<a class="anchor" aria-label="anchor" href="#further-reading"></a>

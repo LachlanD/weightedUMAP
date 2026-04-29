@@ -241,7 +241,7 @@ MIT
 - [`RunWeightedNeighbors()`](https://lachland.github.io/weightedUMAP/reference/RunWeightedNeighbors.md)
   : Build a Variance-Weighted Nearest-Neighbour Graph
 - [`RunWeightedUMAP()`](https://lachland.github.io/weightedUMAP/reference/RunWeightedUMAP.md)
-  : Run Variance-Weighted UMAP on a Seurat Object
+  : Run PC-Weighted UMAP on a Seurat Object
 
 # Articles
 
@@ -249,5 +249,5 @@ MIT
 
 - [Benchmarking wUMAP Against Standard
   UMAP](https://lachland.github.io/weightedUMAP/articles/benchmark.md):
-- [Variance-Weighted UMAP with
+- [PC-Distance Modification for UMAP with
   wUMAP](https://lachland.github.io/weightedUMAP/articles/wUMAP.md):

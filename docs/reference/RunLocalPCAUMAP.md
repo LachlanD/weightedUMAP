@@ -2,10 +2,10 @@
 
 Computes UMAP using a **local PCA metric**: for each cell, the distance
 to each of its \\k\\ nearest neighbours is re-measured in a
-locally-fitted PCA basis built from that neighbourhood. This captures
-anisotropic local structure (e.g. the tangent direction of a trajectory)
-and de-emphasises transverse noise, producing a richer distance measure
-than a single global Euclidean metric.
+locally-fitted PCA basis built from that neighbourhood. Projecting
+displacements onto the dominant local directions has geometric
+motivation for manifold-structured data, but whether it improves
+clustering quality is dataset-dependent.
 
 ## Usage
 
@@ -63,8 +63,7 @@ RunLocalPCAUMAP(
   `"stdev"`
 
   :   Weight by local standard deviation (\\s_l / \sum s\\). Default.
-      Gently emphasises the dominant local direction without collapsing
-      minor variation.
+      Mildest heuristic weighting of local PC directions.
 
   `"prop.var"`
 
@@ -127,8 +126,8 @@ The input Seurat `object` with a new DimReduc stored under
 ## Details
 
 Optionally, each local PC direction can be weighted by its local
-variance contribution (`local.weight.by`), analogous to how `weight.by`
-weights global PCs in
+variance contribution (`local.weight.by`). This is an additional
+heuristic analogous to the global `weight.by` schemes in
 [`RunWeightedUMAP`](https://lachland.github.io/weightedUMAP/reference/RunWeightedUMAP.md).
 
 ## Algorithm

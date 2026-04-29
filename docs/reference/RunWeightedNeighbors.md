@@ -57,9 +57,8 @@ RunWeightedNeighbors(
   `"stdev"`
 
   :   Standard deviation, normalised (`sdev / sum(sdev)`). Default.
-      Gently up-weights early PCs while keeping intermediate ones in
-      play, giving a good balance between signal emphasis and layout
-      completeness.
+      Mildest transformation — early PCs receive somewhat more weight.
+      Whether this improves results is dataset-dependent.
 
   `"prop.var"`
 
@@ -153,7 +152,7 @@ if (FALSE) { # \dontrun{
 library(Seurat)
 library(wUMAP)
 
-# 1. Compute weighted KNN/SNN graphs — stdev weighting (default, recommended)
+# 1. Compute weighted KNN/SNN graphs — stdev weighting (default)
 pbmc <- RunWeightedNeighbors(pbmc, dims = 1:30, prefix = "wt")
 
 # 2. Cluster on the weighted SNN graph
